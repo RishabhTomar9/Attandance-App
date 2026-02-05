@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getFunctions } from "firebase/functions"; // Added
 
 const firebaseConfig = {
     apiKey: "AIzaSyBVzwvphwGvy7CmcrbIhZa0BITLnBGN0XI",
@@ -18,6 +19,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
+export const functions = getFunctions(app); // Export functions
 export { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut };
 
 export default app;

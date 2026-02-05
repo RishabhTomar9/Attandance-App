@@ -1,80 +1,76 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "./AppLayout";
-import RoleBasedRoute from "./roleRoutes";
-
-// Pages
+import ProtectedRoute from "./ProtectedRoute";
 import Login from "../pages/auth/Login";
-import RegisterSite from "../pages/onboarding/RegisterSite";
-import JoinSite from "../pages/onboarding/JoinSite"; // New!
-import OwnerDashboard from "../pages/owner/OwnerDashboard";
-import OwnerSettings from "../pages/owner/OwnerSettings";
-import EmployeeList from "../pages/owner/EmployeeList"; // New!
-import ManagerDashboard from "../pages/manager/ManagerDashboard";
+import JoinSite from "../pages/onboarding/JoinSite";
 import EmployeeDashboard from "../pages/employee/EmployeeDashboard";
+import FaceRegistration from "../pages/employee/FaceRegistration";
+import AttendanceCalendar from "../pages/employee/AttendanceCalendar"; // Added
+import OwnerDashboard from "../pages/owner/OwnerDashboard";
+import ManagersList from "../pages/owner/ManagersList";
+import EmployeeList from "../pages/owner/EmployeeList";
+import AttendanceReports from "../pages/owner/AttendanceReports";
+import Analytics from "../pages/owner/Analytics"; // Added
+import ManagerEmployees from "../pages/manager/ManagerEmployees";
+import ManagerScanner from "../pages/manager/ManagerScanner";
+import OwnerSettings from "../pages/owner/OwnerSettings";
 
-const AppRoutes = () => {
-    return (
-        <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register-site" element={<RegisterSite />} />
-            <Route path="/join" element={<JoinSite />} /> {/* New! */}
+import RegisterSite from "../pages/onboarding/RegisterSite";
 
-            {/* Protected Routes */}
-            <Route element={<AppLayout />}>
-                {/* Redirect root to login */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
+const router = createBrowserRouter([
+    {
+        path: "/login",
+        element: <Login />,
+    },
+    {
+        path: "/join",
+        element: <JoinSite />,
+    },
+    {
+        path: "/register-site",
+        element: <RegisterSite />,
+    },
+    {
+        path: "/",
+        element: <AppLayout />,
+        children: [
+            { index: true, element: <Navigate to="/login" replace /> },
 
-                {/* Owner Routes */}
-                <Route
-                    path="/owner/*"
-                    element={
-                        <RoleBasedRoute allowedRoles={["owner"]}>
-                            <Routes>
-                                <Route index element={<OwnerDashboard />} />
-                                <Route path="managers" element={<div className="p-4">Managers Page Placeholder</div>} />
-                                <Route path="employees" element={<EmployeeList />} /> {/* New! */}
-                                <Route path="reports" element={<div className="p-4">Reports Page Placeholder</div>} />
-                                <Route path="settings" element={<OwnerSettings />} />
-                                <Route path="*" element={<Navigate to="/owner" replace />} />
-                            </Routes>
-                        </RoleBasedRoute>
-                    }
-                />
+            // OWNER ROUTES
+            {
+                element: <ProtectedRoute allowedRoles={['owner']} />,
+                children: [
+                    { path: "owner", element: <OwnerDashboard /> },
+                    { path: "owner/managers", element: <ManagersList /> },
+                    { path: "owner/employees", element: <EmployeeList /> },
+                    { path: "owner/reports", element: <AttendanceReports /> },
+                    { path: "owner/analytics", element: <Analytics /> },
+                    { path: "owner/settings", element: <OwnerSettings /> },
+                ]
+            },
 
-                {/* Manager Routes */}
-                <Route
-                    path="/manager/*"
-                    element={
-                        <RoleBasedRoute allowedRoles={["manager"]}>
-                            <Routes>
-                                <Route index element={<ManagerDashboard />} />
-                                <Route path="employees" element={<div className="p-4">Employees View Placeholder</div>} />
-                                <Route path="reports" element={<div className="p-4">Reports View Placeholder</div>} />
-                                <Route path="*" element={<Navigate to="/manager" replace />} />
-                            </Routes>
-                        </RoleBasedRoute>
-                    }
-                />
+            // MANAGER ROUTES
+            {
+                element: <ProtectedRoute allowedRoles={['manager', 'owner']} />,
+                children: [
+                    { path: "manager", element: <ManagerEmployees /> },
+                    { path: "manager/employees", element: <ManagerEmployees /> },
+                    { path: "manager/scan", element: <ManagerScanner /> },
+                    { path: "manager/reports", element: <AttendanceReports /> },
+                ]
+            },
 
-                {/* Employee Routes */}
-                <Route
-                    path="/employee/*"
-                    element={
-                        <RoleBasedRoute allowedRoles={["employee"]}>
-                            <Routes>
-                                <Route index element={<EmployeeDashboard />} />
-                                <Route path="calendar" element={<div className="p-4">Calendar View Placeholder</div>} />
-                                <Route path="*" element={<Navigate to="/employee" replace />} />
-                            </Routes>
-                        </RoleBasedRoute>
-                    }
-                />
-            </Route>
+            // EMPLOYEE ROUTES
+            {
+                element: <ProtectedRoute allowedRoles={['employee', 'manager', 'owner']} />,
+                children: [
+                    { path: "employee", element: <EmployeeDashboard /> },
+                    { path: "employee/register-face", element: <FaceRegistration /> },
+                    { path: "employee/calendar", element: <AttendanceCalendar /> },
+                ]
+            }
+        ],
+    },
+]);
 
-            {/* 404 Fallback */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-    );
-};
-
-export default AppRoutes;
+export default router;

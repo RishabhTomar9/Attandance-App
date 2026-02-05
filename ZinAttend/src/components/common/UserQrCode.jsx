@@ -1,48 +1,36 @@
 import { useState, useEffect } from "react";
-import { db } from "../../services/firebase";
-import { collection, addDoc, serverTimestamp, onSnapshot, query, where, orderBy, limit } from "firebase/firestore";
+import { functions } from "../../services/firebase";
+import { httpsCallable } from "firebase/functions";
 import { useAuth } from "../../context/AuthContext";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { Loader2, RefreshCw } from "lucide-react";
 
 export default function UserQrCode() {
     const { user } = useAuth();
     const [tokenData, setTokenData] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
 
-    // Auto-generate token on mount and interval
     useEffect(() => {
         generateToken();
-        const interval = setInterval(generateToken, 45000); // Rotate every 45s
+        const interval = setInterval(generateToken, 45000);
         return () => clearInterval(interval);
     }, [user.uid]);
 
     const generateToken = async () => {
-        if (!user.uid || !user.siteId) return;
+        if (!user.uid) return;
         setRefreshing(true);
+        setErrorMsg("");
+
         try {
-            // Create a new token doc in Firestore
-            // We use Firestore to ensure 'serverTimestamp' prevents client-side time spoofing
-            const docRef = await addDoc(collection(db, "qr_tokens"), {
-                uid: user.uid,
-                siteId: user.siteId,
-                role: user.role,
-                createdAt: serverTimestamp(),
-                status: "active", // active, used
-                deviceInfo: navigator.userAgent // light binding
-            });
-
-            // The QR payload is the DOC ID + UID. 
-            // Verification happens by looking up this ID in DB.
-            const payload = JSON.stringify({
-                id: docRef.id,
-                uid: user.uid,
-                siteId: user.siteId
-            });
-
-            setTokenData(payload);
+            const generateQrToken = httpsCallable(functions, "generateQrToken");
+            const result = await generateQrToken();
+            const { token } = result.data;
+            setTokenData(token);
         } catch (error) {
             console.error("QR Generation failed", error);
+            // Don't show technical error to user, just 'Retrying' or simple fail
+            setErrorMsg("Refresh to load ID");
         }
         setRefreshing(false);
     };
@@ -56,19 +44,23 @@ export default function UserQrCode() {
 
             <div className="relative p-3 bg-white border-2 border-slate-900 rounded-xl shadow-lg">
                 {tokenData ? (
-                    <QRCode
+                    <QRCodeCanvas
                         value={tokenData}
                         size={200}
                         level={"H"}
                         includeMargin={true}
                     />
+                ) : errorMsg ? (
+                    <div className="w-[200px] h-[200px] flex items-center justify-center bg-rose-50 text-rose-500 text-xs px-4 text-center">
+                        {errorMsg}
+                    </div>
                 ) : (
                     <div className="w-[200px] h-[200px] flex items-center justify-center bg-slate-50">
                         <Loader2 className="animate-spin text-slate-300" size={32} />
                     </div>
                 )}
 
-                {refreshing && (
+                {refreshing && tokenData && (
                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-sm rounded-lg">
                         <Loader2 className="animate-spin text-slate-900" size={32} />
                     </div>

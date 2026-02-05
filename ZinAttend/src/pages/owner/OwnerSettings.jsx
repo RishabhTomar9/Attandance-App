@@ -3,12 +3,10 @@ import { useAuth } from "../../context/AuthContext";
 import { db } from "../../services/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Card from "../../components/ui/Card";
-import { Building, Wifi, MapPin, Save, Loader2 } from "lucide-react";
+import { Building, Wifi, MapPin, Save, Loader2, Clock, ShieldAlert } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-
-// Fix Leaflet marker icon (reuse fix from RegisterSite if possible, but simplest to re-declare)
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -20,13 +18,20 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-
 const OwnerSettings = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [siteData, setSiteData] = useState(null);
     const [msg, setMsg] = useState("");
+
+    // Policy State (Defaults if not set)
+    const [policy, setPolicy] = useState({
+        punchInStart: "09:00",
+        lateAfterMinutes: 15,
+        halfDayAfterMinutes: 240, // 4 hours
+        punchOutStart: "17:00"
+    });
 
     useEffect(() => {
         const fetchSite = async () => {
@@ -35,7 +40,13 @@ const OwnerSettings = () => {
                     const docRef = doc(db, "sites", user.siteId);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
-                        setSiteData({ id: docSnap.id, ...docSnap.data() });
+                        const data = docSnap.data();
+                        setSiteData({ id: docSnap.id, ...data });
+
+                        // Load Policy or keep defaults
+                        if (data.policy) {
+                            setPolicy({ ...policy, ...data.policy });
+                        }
                     }
                 } catch (err) {
                     console.error("Error fetching site settings:", err);
@@ -55,9 +66,10 @@ const OwnerSettings = () => {
             await updateDoc(docRef, {
                 name: siteData.name,
                 wifiSSID: siteData.wifiSSID,
-                wifiPassword: siteData.wifiPassword
+                wifiPassword: siteData.wifiPassword,
+                policy: policy // Save policy object
             });
-            setMsg("Settings saved successfully.");
+            setMsg("Settings & Policy saved successfully.");
         } catch (err) {
             console.error("Error saving settings:", err);
             setMsg("Failed to save settings.");
@@ -72,13 +84,76 @@ const OwnerSettings = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Site Settings</h1>
-                    <p className="text-slate-500">Manage your organization profile and security</p>
+                    <h1 className="text-2xl font-bold text-slate-800">Site Configuration</h1>
+                    <p className="text-slate-500">Manage security and attendance rules</p>
                 </div>
                 {msg && <span className={`text-sm font-medium ${msg.includes("Failed") ? "text-red-600" : "text-emerald-600"}`}>{msg}</span>}
             </div>
 
             <form onSubmit={handleSave} className="space-y-6">
+
+                {/* 1. ATTENDANCE POLICY */}
+                <Card title="Attendance Policy Rules">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Standard Start Time</label>
+                                <div className="relative">
+                                    <Clock className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                                    <input
+                                        type="time"
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none"
+                                        value={policy.punchInStart}
+                                        onChange={(e) => setPolicy({ ...policy, punchInStart: e.target.value })}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-400 mt-1">Official office opening time.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Standard End Time</label>
+                                <div className="relative">
+                                    <Clock className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                                    <input
+                                        type="time"
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none"
+                                        value={policy.punchOutStart}
+                                        onChange={(e) => setPolicy({ ...policy, punchOutStart: e.target.value })}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-400 mt-1">Minimum time to leave for full day.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-4 rounded-lg space-y-4 border border-slate-100">
+                            <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                                <ShieldAlert size={16} className="text-amber-500" /> Late & Penalty Rules
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Late Mark Grace Period (mins)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none"
+                                        value={policy.lateAfterMinutes}
+                                        onChange={(e) => setPolicy({ ...policy, lateAfterMinutes: parseInt(e.target.value) || 0 })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Auto Half-Day Threshold (mins)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none"
+                                        value={policy.halfDayAfterMinutes}
+                                        onChange={(e) => setPolicy({ ...policy, halfDayAfterMinutes: parseInt(e.target.value) || 0 })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* 2. ORG PROFILE */}
                 <Card title="Organization Profile">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -87,19 +162,21 @@ const OwnerSettings = () => {
                                 <Building className="absolute left-3 top-2.5 text-slate-400" size={18} />
                                 <input
                                     type="text"
-                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none"
                                     value={siteData.name}
                                     onChange={(e) => setSiteData({ ...siteData, name: e.target.value })}
+                                    required
                                 />
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Total Employees</label>
-                            <input type="text" disabled value="Coming Soon" className="w-full px-4 py-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-500" />
+                            <input type="text" disabled value="Managed via HR Tab" className="w-full px-4 py-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-500" />
                         </div>
                     </div>
                 </Card>
 
+                {/* 3. SECURITY & MAP */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card title="Network Security">
                         <div className="space-y-4">
@@ -109,7 +186,7 @@ const OwnerSettings = () => {
                                     <Wifi className="absolute left-3 top-2.5 text-slate-400" size={18} />
                                     <input
                                         type="text"
-                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none"
                                         value={siteData.wifiSSID}
                                         onChange={(e) => setSiteData({ ...siteData, wifiSSID: e.target.value })}
                                     />
@@ -119,7 +196,7 @@ const OwnerSettings = () => {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">WiFi Password</label>
                                 <input
                                     type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none"
                                     value={siteData.wifiPassword}
                                     onChange={(e) => setSiteData({ ...siteData, wifiPassword: e.target.value })}
                                 />
@@ -129,11 +206,13 @@ const OwnerSettings = () => {
 
                     <Card title="Pinned Location">
                         <div className="h-48 rounded-lg overflow-hidden border border-slate-200 relative z-0">
-                            <MapContainer center={siteData.location} zoom={15} scrollWheelZoom={false} dragging={false} style={{ height: "100%", width: "100%" }}>
-                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                <Marker position={siteData.location}></Marker>
-                                <Circle center={siteData.location} radius={siteData.radius || 50} pathOptions={{ fillColor: 'blue', fillOpacity: 0.1, color: 'blue' }} />
-                            </MapContainer>
+                            {siteData.location && (
+                                <MapContainer center={siteData.location} zoom={15} scrollWheelZoom={false} dragging={false} style={{ height: "100%", width: "100%" }}>
+                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    <Marker position={siteData.location}></Marker>
+                                    <Circle center={siteData.location} radius={siteData.radius || 50} pathOptions={{ fillColor: 'blue', fillOpacity: 0.1, color: 'blue' }} />
+                                </MapContainer>
+                            )}
                         </div>
                         <p className="text-xs text-slate-400 mt-2 text-center flex items-center justify-center gap-1">
                             <MapPin size={12} />
@@ -142,13 +221,13 @@ const OwnerSettings = () => {
                     </Card>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end sticky bottom-6 z-10">
                     <button
                         type="submit"
                         disabled={saving}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-70 transition-colors">
+                        className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xl flex items-center gap-2 disabled:opacity-70 transition-all transform hover:scale-105">
                         {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                        Save Changes
+                        Save Policy & Settings
                     </button>
                 </div>
             </form>
