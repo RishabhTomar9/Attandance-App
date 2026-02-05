@@ -1,6 +1,0 @@
-{
-    "scripts": {
-        "typecheck": "tsc --noEmit",
-        "build": "tsc"
-    }
-}
