@@ -15,7 +15,7 @@ export default function FaceRegistration() {
     const [registering, setRegistering] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
-    const { user } = useAuth();
+    const { user, getIdToken } = useAuth();
     const navigate = useNavigate();
 
     // Load Models
@@ -90,8 +90,26 @@ export default function FaceRegistration() {
             // Convert Float32Array to normal Array for Firestore
             const embeddingArray = Array.from(faceDetected);
 
-            const registerFace = httpsCallable(functions, "registerFace");
-            await registerFace({ embedding: embeddingArray });
+            // Get the current user's ID token for the Express API
+            const idToken = await getIdToken();
+
+            // The URL will be your Firebase Functions URL + /api/registerFace
+            // Usually: https://us-central1-<project-id>.cloudfunctions.net/api/registerFace
+            // For now, we assume the default region.
+            const response = await fetch(`https://us-central1-attandance-by-zintrix.cloudfunctions.net/api/registerFace`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({ embedding: embeddingArray })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to save biometric data.");
+            }
 
             setSuccess(true);
             setTimeout(() => navigate("/employee"), 3000);

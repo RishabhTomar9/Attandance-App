@@ -5,13 +5,13 @@ import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions"; // Added
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBVzwvphwGvy7CmcrbIhZa0BITLnBGN0XI",
-    authDomain: "attandance-by-zintrix.firebaseapp.com",
-    projectId: "attandance-by-zintrix",
-    storageBucket: "attandance-by-zintrix.firebasestorage.app",
-    messagingSenderId: "709381346521",
-    appId: "1:709381346521:web:4e8152a9ad0a24d265dac8",
-    measurementId: "G-38YB6JN92Y"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);

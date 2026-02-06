@@ -4,11 +4,13 @@ import * as faceapi from "face-api.js";
 import { functions } from "../../services/firebase";
 import { httpsCallable } from "firebase/functions";
 import { Loader2, MapPin, CheckCircle, AlertCircle, RefreshCw, ScanFace, QrCode } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import Card from "../../components/ui/Card";
 
 export default function ManagerScanner() {
     // State Machine: 'init' | 'scan-qr' | 'scan-face' | 'verifying' | 'result'
     const [step, setStep] = useState('scan-qr');
+    const { user, getIdToken } = useAuth();
 
     const [qrToken, setQrToken] = useState(null);
     const [faceEmbedding, setFaceEmbedding] = useState(null);
@@ -111,15 +113,28 @@ export default function ManagerScanner() {
         setError("");
 
         try {
-            const markAttendance = httpsCallable(functions, "markAttendance");
-            const res = await markAttendance({
-                qrToken: token,
-                lat: location.lat,
-                lng: location.lng,
-                wifiSSID: "ZinAttend_Office_WiFi", // Mock
-                faceEmbedding: embedding // ADDED: Biometric data
+            const idToken = await getIdToken();
+            const response = await fetch(`https://us-central1-attandance-by-zintrix.cloudfunctions.net/api/markAttendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    qrToken: token,
+                    faceEmbedding: embedding,
+                    lat: location.lat,
+                    lng: location.lng
+                })
             });
-            setResult(res.data);
+
+            const resultData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(resultData.error || "Attendance failed");
+            }
+
+            setResult(resultData);
             setStep('result');
         } catch (err) {
             console.error(err);

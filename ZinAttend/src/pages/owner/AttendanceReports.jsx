@@ -7,7 +7,7 @@ import { Download, Filter, Search, Edit2, Save, X } from "lucide-react";
 import { httpsCallable } from "firebase/functions";
 
 export default function AttendanceReports() {
-    const { user } = useAuth();
+    const { user, getIdToken } = useAuth();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -74,12 +74,25 @@ export default function AttendanceReports() {
 
     const saveEdit = async () => {
         try {
-            const updateFn = httpsCallable(functions, "updateAttendance");
-            await updateFn({
-                siteId: user.siteId,
-                recordId: editingId,
-                updates: editForm
+            const idToken = await getIdToken();
+            const response = await fetch(`https://us-central1-attandance-by-zintrix.cloudfunctions.net/api/updateAttendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    siteId: user.siteId,
+                    recordId: editingId,
+                    updates: editForm
+                })
             });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Update failed");
+            }
+
             setEditingId(null);
             fetchReports(); // Refresh
         } catch (err) {
@@ -210,7 +223,7 @@ export default function AttendanceReports() {
                                                 <td className="px-6 py-4">{r.punchOut ? new Date(r.punchOut.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${r.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
-                                                            r.status === 'half-day' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+                                                        r.status === 'half-day' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
                                                         }`}>
                                                         {r.status}
                                                     </span>

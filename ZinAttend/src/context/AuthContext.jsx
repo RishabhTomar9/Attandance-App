@@ -116,8 +116,13 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => signOut(auth);
 
+    const getIdToken = async () => {
+        if (!auth.currentUser) return null;
+        return await auth.currentUser.getIdToken();
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout }}>
+        <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout, getIdToken }}>
             {children}
         </AuthContext.Provider>
     );

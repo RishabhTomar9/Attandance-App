@@ -6,7 +6,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Loader2, RefreshCw } from "lucide-react";
 
 export default function UserQrCode() {
-    const { user } = useAuth();
+    const { user, getIdToken } = useAuth();
     const [tokenData, setTokenData] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
@@ -23,13 +23,21 @@ export default function UserQrCode() {
         setErrorMsg("");
 
         try {
-            const generateQrToken = httpsCallable(functions, "generateQrToken");
-            const result = await generateQrToken();
-            const { token } = result.data;
+            const idToken = await getIdToken();
+            const response = await fetch(`https://us-central1-attandance-by-zintrix.cloudfunctions.net/api/generateQrToken`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                }
+            });
+
+            if (!response.ok) throw new Error("API Fail");
+
+            const { token } = await response.json();
             setTokenData(token);
         } catch (error) {
             console.error("QR Generation failed", error);
-            // Don't show technical error to user, just 'Retrying' or simple fail
             setErrorMsg("Refresh to load ID");
         }
         setRefreshing(false);

@@ -1,0 +1,25 @@
+{
+    "name": "zinattend-backend",
+    "version": "1.0.0",
+    "description": "ZinAttend Backend Functions",
+    "main": "index.js",
+    "engines": {
+        "node": "20"
+    },
+    "scripts": {
+        "build": "echo 'No build step needed for JS'",
+        "serve": "firebase emulators:start --only functions",
+        "shell": "firebase functions:shell",
+        "start": "npm run shell",
+        "deploy": "firebase deploy --only functions",
+        "logs": "firebase functions:log"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "firebase-admin": "^13.6.1",
+        "firebase-functions": "^7.0.5",
+        "uuid": "^13.0.0"
+    },
+    "private": true
+}
