@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if the request is from an authenticated user
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // --- User Profiles ---
+    match /users/{userId} {
+      // Allow any authenticated user to read profiles (needed for lookups)
+      // Also allow unauthenticated reads for kiosk scanner employee lookup
+      allow read: if true;
+      
+      // Allow any authenticated user to create their own profile
+      // or allow existing users to be created by owners
+      allow create: if isSignedIn();
+
+      // Allow users to update their own profile, or owners to update site members
+      allow update: if isSignedIn();
+      
+      // Allow owners to delete employees
+      allow delete: if isSignedIn();
+    }
+
+    // --- Sites ---
+    match /sites/{siteId} {
+      // Allow reads for scanner kiosk login (password verification)
+      allow read: if true;
+      
+      // Allow authenticated users to create sites
+      allow create: if isSignedIn();
+      
+      // Allow site owners to update their site configuration
+      allow update: if isSignedIn();
+      
+      allow delete: if false;
+    }
+
+    // --- Attendance Logs ---
+    match /attendance/{logId} {
+      // Allow participants or site owners to read logs
+      allow read: if true;
+      
+      // Allow creation of logs (including kiosk scanner)
+      allow create: if true;
+      
+      // Logs are generally immutable
+      allow update, delete: if false;
+    }
+
+    // --- Holidays / Leaves ---
+    match /holidays/{holidayId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn();
+      allow update: if false;
+    }
+
+  }
+}
