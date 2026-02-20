@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { db } from '../../firebase/config';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, limit } from 'firebase/firestore';
-import { CheckCircle2, ShieldAlert, Activity, Zap, Lock, Unlock, Scan, Volume2 } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Activity, Zap, Lock, Unlock, Scan, Volume2, RefreshCw } from 'lucide-react';
 
 // Preload audio and unlock on first user interaction
 const punchAudio = new Audio('/sound.mp3');
@@ -34,6 +34,8 @@ const KioskScanner = () => {
     const [isLocked, setIsLocked] = useState(true);
     const [unlockSequence, setUnlockSequence] = useState([]);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [facingMode, setFacingMode] = useState("user");
+    const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const html5QrCode = useRef(null);
     const isTransitioning = useRef(false);
     const processedNonces = useRef(new Set());
@@ -79,7 +81,10 @@ const KioskScanner = () => {
         const init = async () => {
             try {
                 const devices = await Html5Qrcode.getCameras();
-                if (mounted && devices?.length > 0) await startScanning();
+                if (mounted) {
+                    setHasMultipleCameras(devices && devices.length > 1);
+                    if (devices?.length > 0) await startScanning();
+                }
             } catch (err) {
                 if (mounted) setError("Camera access required.");
             }
@@ -209,22 +214,19 @@ const KioskScanner = () => {
         try { screen.orientation?.lock('portrait'); } catch (e) { }
     };
 
-    const exitKiosk = () => {
-        setIsLocked(false);
-        try {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        } catch (e) { }
-        sessionStorage.removeItem('scannerSession');
-        stopScanning();
-        navigate('/scanner-login');
+    const toggleCamera = async () => {
+        const newMode = facingMode === "user" ? "environment" : "user";
+        setFacingMode(newMode);
+        await stopScanning();
+        setTimeout(() => startScanning(newMode), 300);
     };
 
     // --- SCANNER LOGIC ---
 
-    const startScanning = async () => {
+    const startScanning = async (overrideFacing) => {
         if (isTransitioning.current) return;
         isTransitioning.current = true;
+        const mode = overrideFacing || facingMode;
         try {
             if (!html5QrCode.current) html5QrCode.current = new Html5Qrcode(scannerId);
             if (html5QrCode.current.isScanning) await html5QrCode.current.stop();
@@ -233,7 +235,7 @@ const KioskScanner = () => {
             setError(null);
 
             await html5QrCode.current.start(
-                { facingMode: "user" },
+                { facingMode: mode },
                 {
                     fps: 60,
                     qrbox: (w, h) => {
@@ -242,10 +244,10 @@ const KioskScanner = () => {
                     },
                     aspectRatio: window.innerWidth / window.innerHeight,
                     videoConstraints: {
-                        facingMode: "user",
-                        width: { ideal: 4096 },
-                        height: { ideal: 2160 },
-                        frameRate: { ideal: 60 },
+                        facingMode: mode,
+                        width: { min: 640, ideal: 4096 },
+                        height: { min: 480, ideal: 2160 },
+                        frameRate: { min: 60, ideal: 144 },
                         focusMode: "continuous",
                         whiteBalanceMode: "continuous",
                         exposureMode: "continuous",
@@ -407,10 +409,18 @@ const KioskScanner = () => {
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400">Kiosk Locked</span>
                     </div>
 
-                    <div className="flex flex-col items-end space-y-1">
+                    <div className="flex flex-col items-end space-y-3">
                         <div className="flex items-center space-x-2 bg-black/50 backdrop-blur-xl px-4 py-2.5 rounded-xl border border-white/10 shadow-2xl">
                             <Zap className="w-3 h-3 text-primary animate-pulse" />
                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90">{siteData.siteName || 'SCANNER'}</span>
+                            {hasMultipleCameras && (
+                                <button
+                                    onClick={toggleCamera}
+                                    className="ml-2 pointer-events-auto bg-white/5 p-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-all active:scale-90"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                                </button>
+                            )}
                         </div>
                         <p className="text-[7px] text-primary/60 font-black uppercase tracking-widest mr-2">
                             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}

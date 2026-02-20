@@ -5,7 +5,7 @@ import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, getDoc
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ShieldAlert, Camera, X, Activity, MapPin, Wifi, Zap, Home, ChevronLeft } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Camera, X, Activity, MapPin, Wifi, Zap, Home, ChevronLeft, RefreshCw } from 'lucide-react';
 
 // Preload audio and unlock on first user interaction
 const punchAudio = new Audio('/sound.mp3');
@@ -34,6 +34,8 @@ const QRScanner = () => {
     const [scanResult, setScanResult] = useState(null);
     const [error, setError] = useState(null);
     const [isScanning, setIsScanning] = useState(false);
+    const [facingMode, setFacingMode] = useState("user");
+    const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const html5QrCode = useRef(null);
     const isTransitioning = useRef(false);
     const processedNonces = useRef(new Set());
@@ -56,7 +58,10 @@ const QRScanner = () => {
         const init = async () => {
             try {
                 const devices = await Html5Qrcode.getCameras();
-                if (mounted && devices?.length > 0) await startScanning();
+                if (mounted) {
+                    setHasMultipleCameras(devices && devices.length > 1);
+                    if (devices?.length > 0) await startScanning();
+                }
             } catch (err) {
                 if (mounted) setError("Camera access required for secure verification.");
             }
@@ -68,9 +73,18 @@ const QRScanner = () => {
         };
     }, []);
 
-    const startScanning = async () => {
+    const toggleCamera = async () => {
+        const newMode = facingMode === "user" ? "environment" : "user";
+        setFacingMode(newMode);
+        await stopScanning();
+        // Brief delay for hardware release
+        setTimeout(() => startScanning(newMode), 300);
+    };
+
+    const startScanning = async (overrideFacing) => {
         if (isTransitioning.current) return;
         isTransitioning.current = true;
+        const mode = overrideFacing || facingMode;
         try {
             if (!html5QrCode.current) html5QrCode.current = new Html5Qrcode(scannerId);
             if (html5QrCode.current.isScanning) await html5QrCode.current.stop();
@@ -80,7 +94,7 @@ const QRScanner = () => {
             setError(null);
 
             await html5QrCode.current.start(
-                { facingMode: "user" },
+                { facingMode: mode },
                 {
                     fps: 60,
                     qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -90,10 +104,10 @@ const QRScanner = () => {
                     },
                     aspectRatio: window.innerWidth / window.innerHeight,
                     videoConstraints: {
-                        facingMode: "user",
-                        width: { ideal: 4096 },
-                        height: { ideal: 2160 },
-                        frameRate: { ideal: 60 },
+                        facingMode: mode,
+                        width: { min: 640, ideal: 4096 },
+                        height: { min: 480, ideal: 2160 },
+                        frameRate: { min: 60, ideal: 144 },
                         focusMode: "continuous",
                         whiteBalanceMode: "continuous",
                         exposureMode: "continuous",
@@ -282,12 +296,22 @@ const QRScanner = () => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Dashboard</span>
                     </button>
 
-                    <div className="text-right flex flex-col items-end space-y-1">
-                        <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-2xl">
-                            <Zap className="w-3 h-3 text-primary animate-pulse" />
-                            <span className="text-[9px] font-black uppercase tracking-[.2em] text-white/90">{userData?.siteName || 'ZINTRIX_NODE'}</span>
+                    <div className="flex items-center space-x-3">
+                        {hasMultipleCameras && (
+                            <button
+                                onClick={toggleCamera}
+                                className="bg-black/40 backdrop-blur-xl p-2.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all active:scale-90"
+                                title="Switch Camera"
+                            >
+                                <RefreshCw className="w-4 h-4 text-primary" />
+                            </button>
+                        )}
+                        <div className="text-right flex flex-col items-end space-y-1">
+                            <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-2xl">
+                                <Zap className="w-3 h-3 text-primary animate-pulse" />
+                                <span className="text-[9px] font-black uppercase tracking-[.2em] text-white/90">{userData?.siteName || 'ZINTRIX_NODE'}</span>
+                            </div>
                         </div>
-                        <p className="text-[7px] text-primary/60 font-black uppercase tracking-widest mr-2">Secure Uplink Active</p>
                     </div>
                 </div>
 
