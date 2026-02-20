@@ -234,7 +234,7 @@ const KioskScanner = () => {
             await html5QrCode.current.start(
                 { facingMode: "environment" },
                 {
-                    fps: 30,
+                    fps: 60,
                     qrbox: (w, h) => {
                         const size = Math.floor(Math.min(w, h) * 0.85);
                         return { width: size, height: size };
@@ -242,6 +242,9 @@ const KioskScanner = () => {
                     aspectRatio: window.innerWidth / window.innerHeight,
                     videoConstraints: {
                         facingMode: "environment",
+                        width: { ideal: 4096 },
+                        height: { ideal: 2160 },
+                        frameRate: { ideal: 60 },
                         focusMode: "continuous",
                         advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
                     }

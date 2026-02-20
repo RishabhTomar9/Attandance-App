@@ -81,7 +81,7 @@ const QRScanner = () => {
             await html5QrCode.current.start(
                 { facingMode: "environment" },
                 {
-                    fps: 30,
+                    fps: 60,
                     qrbox: (viewfinderWidth, viewfinderHeight) => {
                         const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                         const boxSize = Math.floor(minEdge * 0.85); // Slightly larger box for easier scanning
@@ -90,6 +90,9 @@ const QRScanner = () => {
                     aspectRatio: window.innerWidth / window.innerHeight,
                     videoConstraints: {
                         facingMode: "environment",
+                        width: { ideal: 4096 },
+                        height: { ideal: 2160 },
+                        frameRate: { ideal: 60 },
                         focusMode: "continuous",
                         advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
                     }
