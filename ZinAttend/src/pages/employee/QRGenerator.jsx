@@ -25,11 +25,12 @@ const QRGenerator = () => {
             lat: location.lat,
             lng: location.lng,
             ssid: userData.wifiSSID,
-            token: Math.random().toString(36).substring(7)
+            nonce: `${userData.employeeId}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            v: "2.0"
         };
 
         setQrData(JSON.stringify(payload));
-        setTimeLeft(15);
+        setTimeLeft(10);
         showToast('Security token regenerated', 'info');
     }, [location, userData, showToast]);
 
@@ -62,7 +63,7 @@ const QRGenerator = () => {
     useEffect(() => {
         if (!loading && !error) {
             generatePayload();
-            const interval = setInterval(generatePayload, 15000);
+            const interval = setInterval(generatePayload, 10000);
             return () => clearInterval(interval);
         }
     }, [loading, error, generatePayload]);
@@ -70,7 +71,7 @@ const QRGenerator = () => {
     useEffect(() => {
         if (qrData) {
             const timer = setInterval(() => {
-                setTimeLeft(prev => (prev > 0 ? prev - 1 : 15));
+                setTimeLeft(prev => (prev > 0 ? prev - 1 : 10));
             }, 1000);
             return () => clearInterval(timer);
         }

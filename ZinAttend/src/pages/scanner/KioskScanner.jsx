@@ -36,6 +36,7 @@ const KioskScanner = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
     const html5QrCode = useRef(null);
     const isTransitioning = useRef(false);
+    const processedNonces = useRef(new Set());
     const scannerId = "kiosk-qr-reader";
 
     // Load session + enter fullscreen
@@ -232,7 +233,7 @@ const KioskScanner = () => {
             setError(null);
 
             await html5QrCode.current.start(
-                { facingMode: "environment" },
+                { facingMode: "user" },
                 {
                     fps: 60,
                     qrbox: (w, h) => {
@@ -241,11 +242,13 @@ const KioskScanner = () => {
                     },
                     aspectRatio: window.innerWidth / window.innerHeight,
                     videoConstraints: {
-                        facingMode: "environment",
+                        facingMode: "user",
                         width: { ideal: 4096 },
                         height: { ideal: 2160 },
                         frameRate: { ideal: 60 },
                         focusMode: "continuous",
+                        whiteBalanceMode: "continuous",
+                        exposureMode: "continuous",
                         advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
                     }
                 },
@@ -293,7 +296,20 @@ const KioskScanner = () => {
             const now = new Date();
             const nowTimeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
             const qrTime = new Date(timestamp).getTime();
-            if (now.getTime() - qrTime > 60000) throw new Error('QR code expired. Please generate a new one.');
+
+            // Tight 15s window to prevent photo proxy
+            if (now.getTime() - qrTime > 15000) throw new Error('Live QR expired. Use the rotating code from employee app.');
+
+            // Replay protection (prevent same QR from being used twice)
+            const nonceKey = data.nonce || `${employeeId}_${timestamp}`;
+            if (processedNonces.current.has(nonceKey)) throw new Error('Security signature already used. Wait for rotation.');
+            processedNonces.current.add(nonceKey);
+
+            // Cleanup old nonces
+            if (processedNonces.current.size > 50) {
+                const first = Array.from(processedNonces.current)[0];
+                processedNonces.current.delete(first);
+            }
 
             const dist = calculateDistance(lat, lng, siteData.latitude, siteData.longitude);
             if (dist > (siteData.geoRadius || 100)) throw new Error(`You are too far from the site (${Math.round(dist)}m away).`);
