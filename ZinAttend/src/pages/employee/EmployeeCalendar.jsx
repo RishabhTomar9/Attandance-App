@@ -110,7 +110,7 @@ const EmployeeCalendar = () => {
                     <Database className="w-3 h-3 text-primary" />
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Attendance Log</span>
                 </div>
-                <h1 className="text-4xl font-black italic tracking-tighter">My <span className="text-primary italic">Calendar</span></h1>
+                <h1 className="text-4xl font-black italic ">My <span className="text-primary italic">Calendar</span></h1>
                 {joiningDate && (
                     <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Since {joiningDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                 )}
@@ -194,7 +194,7 @@ const EmployeeCalendar = () => {
                                             </div>
                                             <div>
                                                 <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">First Punch-In</p>
-                                                <p className="font-black text-lg text-white font-mono tracking-tighter">
+                                                <p className="font-black text-lg text-white font-mono ">
                                                     {firstInTime ? firstInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                                                 </p>
                                             </div>
@@ -222,7 +222,7 @@ const EmployeeCalendar = () => {
                                             </div>
                                             <div>
                                                 <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">Last Punch-Out</p>
-                                                <p className="font-black text-lg text-white font-mono tracking-tighter">
+                                                <p className="font-black text-lg text-white font-mono ">
                                                     {lastOutTime ? lastOutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                                                 </p>
                                             </div>

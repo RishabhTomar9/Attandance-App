@@ -4,6 +4,8 @@ import { LayoutDashboard, QrCode, Calendar, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { auth } from '../../firebase/config';
+import BrandingFooter from '../../components/UI/BrandingFooter';
+
 
 // Sub-components
 import EmployeeOverview from './EmployeeOverview';
@@ -68,7 +70,9 @@ const EmployeeDashboard = () => {
                     <Route path="qr" element={<QRGenerator />} />
                     <Route path="calendar" element={<EmployeeCalendar />} />
                 </Routes>
+                <BrandingFooter className="mt-12 opacity-50" />
             </main>
+
 
             <nav className="bottom-nav px-6">
                 <Link to="/employee" className={`nav-item ${isActive('/employee') ? 'active' : ''}`}>

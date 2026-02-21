@@ -173,14 +173,14 @@ const EmployeeOverview = () => {
                                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">Check-In</span>
                             </div>
-                            <p className="text-4xl font-black tracking-tighter">{stats.todayIn}</p>
+                            <p className="text-4xl font-black ">{stats.todayIn}</p>
                         </div>
                         <div className="space-y-2 text-right">
                             <div className="flex items-center space-x-2 justify-end text-gray-500">
                                 <span className="text-[9px] font-black uppercase tracking-widest">Check-Out</span>
                                 <Clock className="w-3.5 h-3.5 text-accent" />
                             </div>
-                            <p className="text-4xl font-black tracking-tighter">{stats.todayOut}</p>
+                            <p className="text-4xl font-black ">{stats.todayOut}</p>
                         </div>
                     </div>
 
@@ -205,7 +205,7 @@ const EmployeeOverview = () => {
                         <Calendar className="w-4 h-4 text-blue-500" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black tracking-tighter">{stats.monthlyAttendance}</h4>
+                        <h4 className="text-2xl font-black ">{stats.monthlyAttendance}</h4>
                         <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Days</p>
                     </div>
                     <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
@@ -218,7 +218,7 @@ const EmployeeOverview = () => {
                         <TrendingUp className="w-4 h-4 text-accent" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black tracking-tighter">{stats.totalHours || '0h'}</h4>
+                        <h4 className="text-2xl font-black ">{stats.totalHours || '0h'}</h4>
                         <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Hours</p>
                     </div>
                     <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
@@ -231,7 +231,7 @@ const EmployeeOverview = () => {
                         <Palmtree className="w-4 h-4 text-blue-400" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black tracking-tighter">{holidays}</h4>
+                        <h4 className="text-2xl font-black ">{holidays}</h4>
                         <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Leaves</p>
                     </div>
                     <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
@@ -266,7 +266,7 @@ const EmployeeOverview = () => {
                                 </div>
                             </div>
                             <div className="text-right space-y-1">
-                                <p className="text-sm font-black text-white font-mono tracking-tighter">
+                                <p className="text-sm font-black text-white font-mono ">
                                     {new Date(log.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                 </p>
                                 <div className="flex items-center justify-end space-x-1">

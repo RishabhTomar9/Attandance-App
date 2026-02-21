@@ -80,7 +80,7 @@ const DialogComponent = ({ dialog }) => {
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" onClick={() => dialog.resolve(false)}></div>
             <div className="glass-card w-full max-w-md p-8 relative z-10 space-y-6 border-white/10 shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="space-y-2 text-center">
-                    <h2 className="text-2xl font-black italic tracking-tighter uppercase text-white">System <span className="text-primary italic">Protocol</span></h2>
+                    <h2 className="text-2xl font-black italic  uppercase text-white">System <span className="text-primary italic">Protocol</span></h2>
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">{dialog.title || 'Administrative Confirmation'}</p>
                 </div>
 

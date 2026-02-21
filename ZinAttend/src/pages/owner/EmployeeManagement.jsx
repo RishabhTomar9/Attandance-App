@@ -128,7 +128,7 @@ const EmployeeManagement = () => {
                         <Users className="w-3 h-3 text-primary" />
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Personnel Registry</span>
                     </div>
-                    <h1 className="text-4xl font-black italic tracking-tighter">Staff <span className="text-primary italic">Nodes</span></h1>
+                    <h1 className="text-4xl font-black italic ">Staff <span className="text-primary italic">Nodes</span></h1>
                     <p className="text-gray-600 text-[9px] font-bold uppercase tracking-widest">{employees.length} Registered • {employees.filter(e => e.isLinked).length} Active</p>
                 </div>
                 <button
@@ -171,7 +171,7 @@ const EmployeeManagement = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-black italic tracking-tighter text-white uppercase">{emp.name}</h3>
+                                        <h3 className="text-xl font-black italic  text-white uppercase">{emp.name}</h3>
                                         <div className="flex items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                                             <Mail className="w-3 h-3 mr-1.5 text-primary" />
                                             <span className="truncate max-w-[150px]">{emp.email}</span>
@@ -234,7 +234,7 @@ const EmployeeManagement = () => {
                         </button>
 
                         <div className="space-y-2">
-                            <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase italic">Personnel <span className="text-primary italic">Initialization</span></h2>
+                            <h2 className="text-3xl font-black italic  text-white uppercase italic">Personnel <span className="text-primary italic">Initialization</span></h2>
                             <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Deploying new node to site: {userData?.siteId}</p>
                         </div>
 
@@ -295,7 +295,7 @@ const EmployeeManagement = () => {
                         </button>
 
                         <div className="space-y-2">
-                            <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase italic">Node <span className="text-primary italic">Reconfig</span></h2>
+                            <h2 className="text-3xl font-black italic  text-white uppercase italic">Node <span className="text-primary italic">Reconfig</span></h2>
                             <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Updating personnel parameters for ID: {editingEmployee.employeeId}</p>
                         </div>
 

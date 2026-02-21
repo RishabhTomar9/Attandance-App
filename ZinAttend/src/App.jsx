@@ -5,6 +5,7 @@ import { UIProvider } from './contexts/UIContext';
 
 // Components
 import Login from './pages/Login';
+import RoleSelection from './pages/RoleSelection';
 import OwnerDashboard from './pages/owner/OwnerDashboard';
 import OwnerRegister from './pages/owner/OwnerRegister';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
@@ -35,9 +36,9 @@ const AppRoutes = () => {
 
     return (
         <Routes>
+            <Route path="/login" element={<RoleSelection />} />
             <Route path="/login/owner" element={<Login role="owner" />} />
             <Route path="/login/employee" element={<Login role="employee" />} />
-            <Route path="/login" element={<Navigate to="/login/owner" replace />} />
 
             {/* Scanner Kiosk Routes (no auth required) */}
             <Route path="/scanner-login" element={<ScannerLogin />} />
@@ -64,7 +65,7 @@ const AppRoutes = () => {
 
             <Route path="/" element={
                 !user ? (
-                    <Navigate to="/login/owner" replace />
+                    <Navigate to="/login" replace />
                 ) : !userData ? (
                     <Loader />
                 ) : (

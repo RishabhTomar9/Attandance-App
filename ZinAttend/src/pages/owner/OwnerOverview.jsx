@@ -159,7 +159,7 @@ const OwnerOverview = () => {
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="space-y-1">
                         <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Today's Attendance Rate</p>
-                        <p className="text-5xl font-black tracking-tighter text-white">{stats.attendanceRate}<span className="text-2xl text-primary ml-1">%</span></p>
+                        <p className="text-5xl font-black  text-white">{stats.attendanceRate}<span className="text-2xl text-primary ml-1">%</span></p>
                     </div>
                     <div className="text-right space-y-2">
                         <div className="px-3 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20 inline-block">
@@ -191,7 +191,7 @@ const OwnerOverview = () => {
                                 <span className={`text-[8px] font-black uppercase text-${stat.color}/80 tracking-widest`}>{stat.sub}</span>
                             </div>
                             <div>
-                                <h3 className="text-3xl font-black tracking-tighter">{stat.value}</h3>
+                                <h3 className="text-3xl font-black ">{stat.value}</h3>
                                 <p className="text-gray-500 text-[9px] font-black uppercase tracking-[0.15em] mt-0.5">{stat.label}</p>
                             </div>
                         </div>
@@ -234,15 +234,15 @@ const OwnerOverview = () => {
                             <div className="mt-4 pt-3 border-t border-white/5 grid grid-cols-3 gap-3">
                                 <div>
                                     <p className="text-[8px] text-gray-600 font-black uppercase tracking-widest">In</p>
-                                    <p className="text-sm font-black font-mono tracking-tighter text-emerald-500">{emp.inTime || '--:--'}</p>
+                                    <p className="text-sm font-black font-mono  text-emerald-500">{emp.inTime || '--:--'}</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Out</p>
-                                    <p className="text-sm font-black font-mono tracking-tighter text-accent">{emp.outTime || '--:--'}</p>
+                                    <p className="text-sm font-black font-mono  text-accent">{emp.outTime || '--:--'}</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Duration</p>
-                                    <p className="text-sm font-black font-mono tracking-tighter text-white">{emp.duration || '--'}</p>
+                                    <p className="text-sm font-black font-mono  text-white">{emp.duration || '--'}</p>
                                 </div>
                             </div>
                         </div>

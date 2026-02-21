@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { db } from '../../firebase/config';
-import { MapPin, Wifi, RefreshCw, AlertTriangle, ShieldCheck, Activity, Target, Zap, Clock } from 'lucide-react';
+import { MapPin, Wifi, RefreshCw, AlertTriangle, ShieldCheck, Activity, Target, Zap, Clock, Maximize2 } from 'lucide-react';
 import Loader from '../../components/UI/Loader';
+
+// QR code size matches the scanner's expected scan area
+// Scanner qrbox is ~65% of viewfinder, this QR fills most of the employee's screen
+const QR_SIZE = 280;
 
 const QRGenerator = () => {
     const { userData } = useAuth();
@@ -13,26 +17,28 @@ const QRGenerator = () => {
     const [location, setLocation] = useState({ lat: null, lng: null });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(15);
+    const [timeLeft, setTimeLeft] = useState(10);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const qrContainerRef = useRef(null);
 
     const generatePayload = useCallback(() => {
         if (!location.lat || !location.lng || !userData?.employeeId) return;
 
+        // Compressed payload for simpler QR (fewer modules)
         const payload = {
-            employeeId: userData.employeeId,
-            siteId: userData.siteId,
-            timestamp: new Date().toISOString(),
-            lat: location.lat,
-            lng: location.lng,
-            ssid: userData.wifiSSID,
-            nonce: `${userData.employeeId}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-            v: "2.0"
+            eid: userData.employeeId,
+            sid: userData.siteId,
+            ts: Date.now(),
+            lat: parseFloat(location.lat.toFixed(5)),
+            lng: parseFloat(location.lng.toFixed(5)),
+            net: userData.wifiSSID || '',
+            n: Math.random().toString(36).substring(2, 9), // Compact 7-char nonce
+            v: "3.0"
         };
 
         setQrData(JSON.stringify(payload));
         setTimeLeft(10);
-        showToast('Security token regenerated', 'info');
-    }, [location, userData, showToast]);
+    }, [location, userData]);
 
     useEffect(() => {
         const getLocation = () => {
@@ -77,7 +83,67 @@ const QRGenerator = () => {
         }
     }, [qrData]);
 
+    // Fullscreen toggle for the QR code
+    const toggleFullscreen = () => {
+        setIsFullscreen(prev => !prev);
+    };
+
+    // Exit fullscreen on back button
+    useEffect(() => {
+        const handleBack = () => {
+            if (isFullscreen) {
+                setIsFullscreen(false);
+            }
+        };
+        window.addEventListener('popstate', handleBack);
+        if (isFullscreen) window.history.pushState(null, '', window.location.pathname);
+        return () => window.removeEventListener('popstate', handleBack);
+    }, [isFullscreen]);
+
     if (loading) return <Loader message="Initializing_Encryption_Hub" />;
+
+    // Fullscreen QR view — maximizes the QR for easy scanning
+    if (isFullscreen) {
+        return (
+            <div
+                className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center"
+                onClick={toggleFullscreen}
+            >
+                <div className="flex-1 flex items-center justify-center w-full p-6">
+                    {qrData ? (
+                        <QRCodeSVG
+                            value={qrData}
+                            size={Math.min(window.innerWidth, window.innerHeight) * 0.85}
+                            level="M"
+                            includeMargin={true}
+                            style={{ maxWidth: '100%', maxHeight: '100%' }}
+                        />
+                    ) : (
+                        <RefreshCw className="animate-spin text-gray-300 w-16 h-16" />
+                    )}
+                </div>
+
+                {/* Bottom info bar */}
+                <div className="w-full bg-black py-4 px-6 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                        <Activity className="w-4 h-4 text-primary animate-pulse" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
+                            ROTATING: {timeLeft}S
+                        </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-full bg-white/10 rounded-full h-1 w-20 overflow-hidden">
+                            <div
+                                className="h-full bg-primary rounded-full transition-all duration-1000 ease-linear"
+                                style={{ width: `${(timeLeft / 10) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest">Tap to exit</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-10 pt-6 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-10">
@@ -88,7 +154,7 @@ const QRGenerator = () => {
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em]">Identity Uplink Active</span>
                     </div>
                 </div>
-                <h1 className="text-4xl font-black italic tracking-tighter">Punch <span className="text-primary italic">Signature</span></h1>
+                <h1 className="text-4xl font-black italic ">Punch <span className="text-primary italic">Signature</span></h1>
                 <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Personnel verification required for gate access</p>
             </header>
 
@@ -127,35 +193,64 @@ const QRGenerator = () => {
                 </div>
             ) : (
                 <div className="flex flex-col items-center space-y-12">
-                    <div className="relative group">
-                        {/* Futuristic Frame Decorations */}
-                        <div className="absolute -inset-4 border border-white/5 rounded-xl group-hover:border-primary/20 transition-colors duration-500"></div>
-                        <div className="absolute top-0 -left-1 w-2 h-10 bg-primary/40 blur-[2px] rounded-lg"></div>
-                        <div className="absolute -bottom-1 right-0 w-10 h-2 bg-primary/40 blur-[2px] rounded-lg"></div>
+                    {/* QR Code Display */}
+                    <div className="relative group" ref={qrContainerRef}>
+                        {/* Outer frame with corner accents */}
+                        <div className="absolute -inset-5 pointer-events-none">
+                            {/* Top-left corner */}
+                            <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary/40 rounded-tl-lg"></div>
+                            {/* Top-right corner */}
+                            <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary/40 rounded-tr-lg"></div>
+                            {/* Bottom-left corner */}
+                            <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary/40 rounded-bl-lg"></div>
+                            {/* Bottom-right corner */}
+                            <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary/40 rounded-br-lg"></div>
+                        </div>
 
-                        <div className="bg-white p-7 rounded-xl shadow-[0_0_80px_rgba(59,130,246,0.1)] relative z-10 transition-transform duration-500 group-hover:scale-[1.02]">
+                        {/* Side accent glow lines */}
+                        <div className="absolute top-0 -left-1.5 w-1 h-12 bg-primary/30 blur-[1px] rounded-full"></div>
+                        <div className="absolute -bottom-1.5 right-0 w-12 h-1 bg-primary/30 blur-[1px] rounded-full"></div>
+
+                        {/* QR Code white container */}
+                        <div
+                            className="bg-white p-6 rounded-xl shadow-[0_0_100px_rgba(59,130,246,0.08)] relative z-10 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
+                            onClick={toggleFullscreen}
+                        >
                             {qrData ? (
                                 <QRCodeSVG
                                     value={qrData}
-                                    size={250}
-                                    level="H"
+                                    size={QR_SIZE}
+                                    level="M"
                                     includeMargin={false}
                                 />
                             ) : (
-                                <div className="w-[250px] h-[250px] flex items-center justify-center bg-gray-50">
+                                <div className="flex items-center justify-center" style={{ width: QR_SIZE, height: QR_SIZE }}>
                                     <RefreshCw className="animate-spin text-gray-300 w-10 h-10" />
                                 </div>
                             )}
+
+                            {/* Fullscreen hint */}
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Maximize2 className="w-3.5 h-3.5 text-white" />
+                            </div>
                         </div>
 
-                        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-center w-full space-y-3">
-                            <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/5 shadow-neon">
+                        {/* Timer badge below QR */}
+                        <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-center w-full">
+                            <div className="inline-flex items-center space-x-3 bg-black/40 backdrop-blur-xl px-5 py-2.5 rounded-xl border border-white/5 shadow-neon">
                                 <Activity className="w-3.5 h-3.5 text-primary" />
                                 <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">ROTATING: {timeLeft}S</span>
+                                <div className="w-12 bg-white/10 rounded-full h-1 overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary rounded-full transition-all duration-1000 ease-linear"
+                                        style={{ width: `${(timeLeft / 10) * 100}%` }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
+                    {/* Status cards */}
                     <div className="w-full max-w-sm grid grid-cols-1 gap-4 mt-10">
                         <div className="glass-card p-5 flex items-center justify-between border-white/10 bg-gradient-to-r from-slate-900/40 to-black/40 rounded-xl">
                             <div className="flex items-center space-x-4">
@@ -170,7 +265,7 @@ const QRGenerator = () => {
                             <div className="w-2 h-2 rounded-lg bg-blue-500 shadow-neon-blue animate-pulse"></div>
                         </div>
 
-                        <div className="glass-card p-5 flex items-center justify-between border-white/5 bg-gradient-to-r from-slate-900/40 to-black/40">
+                        <div className="glass-card p-5 flex items-center justify-between border-white/5 bg-gradient-to-r from-slate-900/40 to-black/40 rounded-xl">
                             <div className="flex items-center space-x-4">
                                 <div className="bg-secondary/10 p-3 rounded-lg">
                                     <Wifi className="text-secondary w-5 h-5" />
@@ -182,6 +277,15 @@ const QRGenerator = () => {
                             </div>
                             <div className="w-2 h-2 rounded-lg bg-secondary shadow-neon-success animate-pulse"></div>
                         </div>
+
+                        {/* Tap to expand hint */}
+                        <button
+                            onClick={toggleFullscreen}
+                            className="w-full py-3.5 rounded-xl border border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center space-x-2 transition-all active:scale-[0.98]"
+                        >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            <span>Expand QR for easy scanning</span>
+                        </button>
                     </div>
 
                     <div className="pt-4 flex flex-col items-center space-y-2 opacity-40">
@@ -197,4 +301,3 @@ const QRGenerator = () => {
 };
 
 export default QRGenerator;
-

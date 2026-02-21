@@ -128,7 +128,7 @@ const OwnerSettings = () => {
                     <Settings className="w-3.5 h-3.5 text-primary" />
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Environment Terminal</span>
                 </div>
-                <h1 className="text-4xl font-black italic tracking-tighter text-white">Kernel <span className="text-primary italic">Config</span></h1>
+                <h1 className="text-4xl font-black italic  text-white">Kernel <span className="text-primary italic">Config</span></h1>
                 <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Modify site operational parameters</p>
             </header>
 

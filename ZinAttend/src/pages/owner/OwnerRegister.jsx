@@ -5,6 +5,8 @@ import { db } from '../../firebase/config';
 import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { MapPin, Wifi, Clock, ShieldCheck, ChevronRight, Activity, Zap, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useUI } from '../../contexts/UIContext';
+import BrandingFooter from '../../components/UI/BrandingFooter';
+
 
 const OwnerRegister = () => {
     const { user } = useAuth();
@@ -101,7 +103,7 @@ const OwnerRegister = () => {
                         <Activity className="w-3.5 h-3.5 text-primary animate-pulse" />
                         <span className="text-[10px] font-black text-primary uppercase tracking-widest">Initialization sequence</span>
                     </div>
-                    <h1 className="text-4xl font-black italic tracking-tighter text-white">Site <span className="text-primary">Onboarding</span></h1>
+                    <h1 className="text-4xl font-black italic  text-white">Site <span className="text-primary">Onboarding</span></h1>
                     <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Deploying Node: {step}/4</p>
                 </header>
 
@@ -317,8 +319,12 @@ const OwnerRegister = () => {
                         />
                     ))}
                 </div>
+
+                <BrandingFooter className="opacity-40" />
             </div>
         </div>
+
+
     );
 };
 

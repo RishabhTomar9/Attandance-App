@@ -289,7 +289,7 @@ const EmployeeDetail = () => {
                 ].map((s, i) => (
                     <div key={i} className="glass-card p-4 rounded-xl border-white/5 text-center space-y-2">
                         <s.icon className={`w-4 h-4 text-${s.color} mx-auto`} />
-                        <p className="text-2xl font-black tracking-tighter">{s.value}</p>
+                        <p className="text-2xl font-black ">{s.value}</p>
                         <p className={`text-[7px] font-black uppercase tracking-widest text-${s.color}`}>{s.label}</p>
                     </div>
                 ))}
@@ -377,7 +377,7 @@ const EmployeeDetail = () => {
                                     </div>
                                     <div>
                                         <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">First Punch-In</p>
-                                        <p className="font-black text-lg text-white font-mono tracking-tighter">
+                                        <p className="font-black text-lg text-white font-mono ">
                                             {firstIn ? new Date(firstIn.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                                         </p>
                                     </div>
@@ -405,7 +405,7 @@ const EmployeeDetail = () => {
                                     </div>
                                     <div>
                                         <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">Last Punch-Out</p>
-                                        <p className="font-black text-lg text-white font-mono tracking-tighter">
+                                        <p className="font-black text-lg text-white font-mono ">
                                             {lastOut ? new Date(lastOut.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                                         </p>
                                     </div>

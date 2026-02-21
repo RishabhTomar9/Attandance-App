@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { auth } from '../../firebase/config';
 import { signOut } from 'firebase/auth';
+import BrandingFooter from '../../components/UI/BrandingFooter';
+
 
 // Sub-components
 import OwnerOverview from './OwnerOverview';
@@ -76,7 +78,9 @@ const OwnerDashboard = () => {
                     <Route path="scanner" element={<QRScanner />} />
                     <Route path="settings" element={<OwnerSettings />} />
                 </Routes>
+                <BrandingFooter className="mt-12 opacity-50" />
             </main>
+
 
             <nav className="bottom-nav px-4">
                 <Link to="/owner" className={`nav-item ${isActive('/owner') ? 'active' : ''}`}>

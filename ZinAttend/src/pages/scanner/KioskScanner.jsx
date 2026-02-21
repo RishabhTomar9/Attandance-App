@@ -234,29 +234,44 @@ const KioskScanner = () => {
             setScanResult(null);
             setError(null);
 
-            await html5QrCode.current.start(
-                { facingMode: mode },
-                {
-                    fps: 60,
-                    qrbox: (w, h) => {
-                        const size = Math.floor(Math.min(w, h) * 0.85);
-                        return { width: size, height: size };
+            try {
+                await html5QrCode.current.start(
+                    { facingMode: mode },
+                    {
+                        fps: 60,
+                        qrbox: (w, h) => {
+                            const size = Math.floor(Math.min(w, h) * 0.95);
+                            return { width: size, height: size };
+                        },
+                        aspectRatio: window.innerWidth / window.innerHeight,
+                        videoConstraints: {
+                            facingMode: mode,
+                            width: { ideal: 4096 },
+                            height: { ideal: 2160 },
+                            frameRate: { ideal: 60 },
+                            // Auto-zoom to 2x for back camera to avoid ultrawide distortion and align QR better
+                            advanced: mode === "environment" ? [{ zoom: 2.0 }] : []
+                        }
                     },
-                    aspectRatio: window.innerWidth / window.innerHeight,
-                    videoConstraints: {
-                        facingMode: mode,
-                        width: { min: 640, ideal: 4096 },
-                        height: { min: 480, ideal: 2160 },
-                        frameRate: { min: 60, ideal: 144 },
-                        focusMode: "continuous",
-                        whiteBalanceMode: "continuous",
-                        exposureMode: "continuous",
-                        advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
-                    }
-                },
-                onScanSuccess,
-                () => { }
-            );
+                    onScanSuccess,
+                    () => { }
+                );
+            } catch (firstErr) {
+                console.warn("Retrying with fallback constraints...", firstErr);
+                // Fallback to absolute basics
+                await html5QrCode.current.start(
+                    { facingMode: mode },
+                    {
+                        fps: 60,
+                        qrbox: (w, h) => {
+                            const s = Math.floor(Math.min(w, h) * 0.8);
+                            return { width: s, height: s };
+                        }
+                    },
+                    onScanSuccess,
+                    () => { }
+                );
+            }
         } catch (err) {
             const msg = typeof err === 'string' ? err : err.message || '';
             if (!msg.includes("already under transition")) setError("Camera initialization failed.");
@@ -291,19 +306,26 @@ const KioskScanner = () => {
 
         try {
             const data = JSON.parse(decodedText);
-            const { employeeId, siteId, timestamp, lat, lng, ssid } = data;
+            // Support both old and new formats
+            const employeeId = data.eid || data.employeeId;
+            const siteId = data.sid || data.siteId;
+            const timestamp = data.ts || data.timestamp;
+            const lat = data.lat;
+            const lng = data.lng;
+            const ssid = data.net || data.ssid;
+            const nonce = data.n || data.nonce;
 
             if (siteId !== siteData.siteId) throw new Error('Wrong site. Please use the correct QR code.');
 
             const now = new Date();
             const nowTimeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-            const qrTime = new Date(timestamp).getTime();
+            const qrTime = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
 
             // Tight 15s window to prevent photo proxy
             if (now.getTime() - qrTime > 15000) throw new Error('Live QR expired. Use the rotating code from employee app.');
 
             // Replay protection (prevent same QR from being used twice)
-            const nonceKey = data.nonce || `${employeeId}_${timestamp}`;
+            const nonceKey = nonce || `${employeeId}_${timestamp}`;
             if (processedNonces.current.has(nonceKey)) throw new Error('Security signature already used. Wait for rotation.');
             processedNonces.current.add(nonceKey);
 
@@ -484,7 +506,7 @@ const KioskScanner = () => {
 
                                         <div className="space-y-3">
                                             <p className="text-[12px] font-black text-white/30 uppercase tracking-[.3em]">{scanResult.name}</p>
-                                            <h3 className={`text-4xl font-black italic tracking-tighter ${scanResult.type === 'HALF DAY' ? 'text-amber-500' : 'text-white'}`}>
+                                            <h3 className={`text-4xl font-black italic  ${scanResult.type === 'HALF DAY' ? 'text-amber-500' : 'text-white'}`}>
                                                 {scanResult.type === 'HALF DAY' ? 'Late Entry' : scanResult.type === 'IN' ? 'Punched In ✓' : 'Punched Out ✓'}
                                             </h3>
                                         </div>
