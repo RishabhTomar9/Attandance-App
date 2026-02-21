@@ -22,14 +22,14 @@ const OwnerDashboard = () => {
 
     const handleLogout = async () => {
         const ok = await confirm({
-            title: 'End Admin Session',
-            message: 'You will be signed out of the admin console. Any unsaved configuration changes will be lost.',
-            confirmText: 'SIGN OUT',
-            cancelText: 'STAY',
+            title: 'Logout',
+            message: 'Are you sure you want to logout?',
+            confirmText: 'LOGOUT',
+            cancelText: 'CANCEL',
             danger: true
         });
         if (!ok) return;
-        showToast('Session terminated', 'info');
+        showToast('Logged out', 'info');
         await signOut(auth);
     };
 
@@ -44,26 +44,23 @@ const OwnerDashboard = () => {
             {/* Top Bar */}
             <header className="p-5 flex justify-between items-center sticky top-0 z-40 bg-black/70 backdrop-blur-2xl border-b border-white/5">
                 <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent p-[1px] shadow-neon">
-                        <div className="w-full h-full rounded-xl bg-black flex items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent p-[1px] shadow-neon">
+                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center overflow-hidden">
                             <img src={userData?.photoURL || `https://ui-avatars.com/api/?name=${userData?.name}&background=0f172a&color=3b82f6&bold=true`} alt="profile" className="w-full h-full object-cover" />
                         </div>
                     </div>
                     <div>
                         <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest flex items-center">
                             <ShieldCheck className="w-3 h-3 mr-1 text-primary" />
-                            Admin Console
+                            Admin
                         </p>
-                        <h2 className="text-sm font-bold truncate max-w-[140px]">{userData?.siteName || 'ZinAttend'}</h2>
+                        <h2 className="text-xl uppercase font-bold">{userData?.siteName || 'ZinAttend'}</h2>
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95">
-                        <Bell className="w-5 h-5 text-gray-400" />
-                    </button>
                     <button
                         onClick={handleLogout}
-                        className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all active:scale-95"
+                        className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all active:scale-95"
                     >
                         <LogOut className="w-5 h-5 text-red-500" />
                     </button>
@@ -97,8 +94,8 @@ const OwnerDashboard = () => {
                 </Link>
 
                 <Link to="/owner/scanner" className="relative -top-6 group">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300">
-                        <div className="w-full h-full rounded-xl bg-black flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-lg bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300">
+                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
                             <QrCode className="w-8 h-8 text-white" />
                         </div>
                     </div>
@@ -109,7 +106,7 @@ const OwnerDashboard = () => {
                     <div className="nav-item-icon">
                         <Settings className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Config</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Setup</span>
                 </Link>
             </nav>
         </div>

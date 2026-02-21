@@ -87,14 +87,18 @@ const EmployeeCalendar = () => {
 
         const logs = attendanceData[d];
         if (logs) {
+            const hasHalfDay = logs.some(l => l.type === 'HALF DAY');
             const hasIn = logs.some(l => l.type === 'IN');
             const hasOut = logs.some(l => l.type === 'OUT');
+
+            if (hasHalfDay) return 'tile-half';
             if (hasIn && hasOut) return 'tile-present';
-            if (hasIn) return 'tile-half';
+            if (hasIn) return 'tile-half'; // Partial day
         }
 
         // Past working day with no logs = absent
         return 'tile-absent';
+
     };
 
     const handleDateChange = (newDate) => {
@@ -106,73 +110,81 @@ const EmployeeCalendar = () => {
         <div className="space-y-8 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-10">
             {loading && <Loader message="Loading_Calendar" />}
             <header className="space-y-2">
-                <div className="inline-flex items-center space-x-2 bg-primary/10 px-3 py-1 rounded-xl border border-primary/20">
-                    <Database className="w-3 h-3 text-primary" />
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Attendance Log</span>
+                <div className="flex items-center space-x-3">
+                    <div className="bg-primary/10 px-3 py-1.5 rounded-2xl border border-primary/20">
+                        <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">History Log</span>
                 </div>
-                <h1 className="text-4xl font-black italic ">My <span className="text-primary italic">Calendar</span></h1>
-                {joiningDate && (
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Since {joiningDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                )}
+                <h1 className="text-4xl font-black italic ">Work <span className="text-primary italic">Record</span></h1>
             </header>
 
-            <div className="glass-card p-6 calendar-container bg-black/40 backdrop-blur-2xl border-white/5 ring-1 ring-white/10 shadow-neon-soft rounded-xl">
-                <Calendar
-                    onChange={handleDateChange}
-                    value={date}
-                    tileClassName={tileClassName}
-                    prevLabel={<ChevronLeft className="w-5 h-5 mx-auto text-primary" />}
-                    nextLabel={<ChevronRight className="w-5 h-5 mx-auto text-primary" />}
-                    next2Label={null}
-                    prev2Label={null}
-                    formatShortWeekday={(locale, date) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]}
-                />
 
-                {/* Inline Legend */}
-                <div className="flex items-center justify-center space-x-5 mt-6 pt-4 border-t border-white/5">
-                    {[
-                        { label: 'Present', cls: 'bg-emerald-500' },
-                        { label: 'Half', cls: 'bg-amber-500' },
-                        { label: 'Absent', cls: 'bg-red-500' },
-                        { label: 'Leave', cls: 'bg-blue-500' },
-                    ].map((l, i) => (
-                        <div key={i} className="flex items-center space-x-1.5">
-                            <div className={`w-2 h-2 rounded-full ${l.cls}`}></div>
-                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">{l.label}</span>
-                        </div>
-                    ))}
+            <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-accent/10 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                <div className="relative glass-card p-4 sm:p-8 calendar-container bg-black/60 backdrop-blur-3xl rounded-[2.5rem] border-white/5 shadow-2xl overflow-hidden">
+                    <Calendar
+                        onChange={handleDateChange}
+                        value={date}
+                        tileClassName={tileClassName}
+                        prevLabel={<div className="p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-primary/10 hover:text-primary transition-all"><ChevronLeft className="w-5 h-5 mx-auto" /></div>}
+                        nextLabel={<div className="p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-primary/10 hover:text-primary transition-all"><ChevronRight className="w-5 h-5 mx-auto" /></div>}
+                        next2Label={null}
+                        prev2Label={null}
+                        formatShortWeekday={(locale, date) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]}
+                    />
+
+                    {/* Legend Grid */}
+                    <div className="grid grid-cols-4 gap-2 mt-10 pt-8 border-t border-white/5">
+                        {[
+                            { label: 'Full', cls: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' },
+                            { label: 'Half', cls: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]' },
+                            { label: 'Miss', cls: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]' },
+                            { label: 'Off', cls: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]' },
+                        ].map((l, i) => (
+                            <div key={i} className="flex flex-col items-center space-y-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${l.cls}`}></div>
+                                <span className="text-[7px] font-black text-gray-600 uppercase tracking-widest">{l.label}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
+
             <section className="space-y-6">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                    <h3 className="font-black italic text-xl flex items-center tracking-tight">
-                        <History className="w-5 h-5 mr-3 text-primary" />
-                        Day Summary
-                    </h3>
-                    <div className="bg-white/5 px-4 py-1.5 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center space-x-3 text-white/40">
+                        <History className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Daily Details</span>
+                    </div>
+                    <div className="h-[1px] flex-1 mx-6 bg-white/5"></div>
+                    <div className="px-4 py-1.5 bg-white/5 rounded-2xl border border-white/5">
                         <span className="text-[10px] font-black font-mono text-gray-400">
-                            {date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                            {date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }).toUpperCase()}
                         </span>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     {holidayDates.has(date.toDateString()) ? (
-                        <div className="glass-card p-6 rounded-xl border-blue-500/20 bg-blue-500/5">
-                            <div className="flex items-center space-x-4">
-                                <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
-                                    <CalendarIcon className="text-blue-500 w-5 h-5" />
+                        <div className="glass-card p-8 rounded-[2.5rem] border-blue-500/10 bg-blue-500/5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12 group-hover:scale-110 transition-transform">
+                                <Palmtree className="w-24 h-24 text-blue-500" />
+                            </div>
+                            <div className="flex items-center space-x-6">
+                                <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+                                    <CalendarIcon className="text-blue-500 w-6 h-6" />
                                 </div>
-                                <div>
-                                    <p className="font-black text-sm uppercase tracking-wider text-blue-500">Leave Day</p>
-                                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Marked by admin</p>
+                                <div className="space-y-1">
+                                    <p className="font-black text-sm uppercase tracking-wider text-blue-400">Leave Day</p>
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest italic leading-relaxed">System recorded holiday or sabbatical</p>
                                 </div>
                             </div>
                         </div>
                     ) : selectedDayLogs.length > 0 ? (() => {
                         const sorted = [...selectedDayLogs].sort((a, b) => a.timestamp.seconds - b.timestamp.seconds);
-                        const firstIn = sorted.find(l => l.type === 'IN');
+                        const firstIn = sorted.find(l => l.type === 'IN' || l.type === 'HALF DAY');
                         const lastOut = [...sorted].reverse().find(l => l.type === 'OUT');
                         const firstInTime = firstIn ? new Date(firstIn.timestamp.seconds * 1000) : null;
                         const lastOutTime = lastOut ? new Date(lastOut.timestamp.seconds * 1000) : null;
@@ -184,71 +196,82 @@ const EmployeeCalendar = () => {
                         }
 
                         return (
-                            <div className="glass-card p-6 border-white/10 bg-gradient-to-br from-slate-900/50 via-black/40 to-slate-900/50 relative overflow-hidden rounded-xl">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-primary/40"></div>
-                                <div className="space-y-6">
+                            <div className="glass-card p-8 border-white/5 bg-black/40 rounded-[2.5rem] relative group overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20"></div>
+
+                                <div className="space-y-10">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
-                                                <Zap className="text-emerald-500 w-5 h-5" />
+                                        <div className="flex items-center space-x-5">
+                                            <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.1)]">
+                                                <Zap className="text-emerald-500 w-6 h-6" />
                                             </div>
                                             <div>
-                                                <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">First Punch-In</p>
-                                                <p className="font-black text-lg text-white font-mono ">
-                                                    {firstInTime ? firstInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                                <p className="font-black text-[9px] tracking-[0.2em] text-gray-500 uppercase">Start Point</p>
+                                                <p className="font-black text-2xl text-white tracking-tight">
+                                                    {firstInTime ? firstInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center space-x-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-                                            <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                                            <span className="text-[8px] text-emerald-500 uppercase font-black tracking-widest">Verified</span>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[8px] text-emerald-500 font-black uppercase tracking-[.3em] mb-1">GATE_OK</span>
+                                            <div className="h-1 w-8 bg-emerald-500/30 rounded-full"></div>
                                         </div>
                                     </div>
 
-                                    <div className="relative flex items-center">
-                                        <div className="flex-1 border-t border-dashed border-white/5"></div>
-                                        {hoursWorked && (
-                                            <div className="mx-4 px-4 py-1.5 bg-primary/10 rounded-lg border border-primary/20">
-                                                <span className="text-[9px] font-black text-primary uppercase tracking-widest">{hoursWorked} Total</span>
+                                    <div className="relative flex items-center px-4">
+                                        <div className="flex-1 h-px bg-white/5"></div>
+                                        {hoursWorked ? (
+                                            <div className="mx-6 px-5 py-2 bg-primary/10 rounded-2xl border border-primary/20 shadow-lg group-hover:scale-110 transition-transform">
+                                                <span className="text-xs font-black text-primary uppercase italic tracking-widest">{hoursWorked} Worked</span>
                                             </div>
+                                        ) : (
+                                            <div className="mx-6 w-2 h-2 rounded-full bg-white/5"></div>
                                         )}
-                                        <div className="flex-1 border-t border-dashed border-white/5"></div>
+                                        <div className="flex-1 h-px bg-white/5"></div>
                                     </div>
 
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="bg-accent/10 p-3 rounded-xl border border-accent/20">
-                                                <Clock className="text-accent w-5 h-5" />
+                                        <div className="flex items-center space-x-5">
+                                            <div className="bg-accent/10 p-4 rounded-2xl border border-accent/20 shadow-[0_0_40px_rgba(59,130,246,0.1)]">
+                                                <Clock className="text-accent w-6 h-6" />
                                             </div>
                                             <div>
-                                                <p className="font-black italic text-[9px] tracking-[0.2em] text-gray-500 uppercase">Last Punch-Out</p>
-                                                <p className="font-black text-lg text-white font-mono ">
-                                                    {lastOutTime ? lastOutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                                                <p className="font-black text-[9px] tracking-[0.2em] text-gray-500 uppercase">End Point</p>
+                                                <p className="font-black text-2xl text-white tracking-tight">
+                                                    {lastOutTime ? lastOutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </p>
                                             </div>
                                         </div>
-                                        {lastOut && (
-                                            <div className="flex items-center space-x-1.5 bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20">
-                                                <ShieldCheck className="w-3 h-3 text-accent" />
-                                                <span className="text-[8px] text-accent uppercase font-black tracking-widest">Verified</span>
-                                            </div>
-                                        )}
+                                        <div className="flex flex-col items-end opacity-40">
+                                            <span className="text-[8px] text-accent font-black uppercase tracking-[.3em] mb-1">EXIT_LOG</span>
+                                            <div className="h-1 w-8 bg-accent/30 rounded-full"></div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                                    <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest">{sorted.length} Total Punches</p>
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">{firstIn?.siteName || 'MAIN PORTAL'}</p>
+
+                                    <div className="pt-8 border-t border-white/5 flex flex-wrap gap-4 items-center justify-between">
+                                        <div className="flex items-center space-x-2 text-gray-600">
+                                            <ShieldCheck className="w-4 h-4" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest">{sorted.length} Events Logged</p>
+                                        </div>
+                                        <p className="text-[9px] text-primary/60 font-black uppercase tracking-[0.2em] bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
+                                            {firstIn?.siteName || 'MAIN PORTAL'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         );
                     })() : (
-                        <div className="flex flex-col items-center justify-center py-12 glass-card bg-white/2 border-dashed border-white/10 rounded-xl">
-                            <CalendarIcon className="w-10 h-10 text-gray-800 mb-3" />
-                            <p className="text-gray-600 font-bold italic tracking-tight text-sm">No activity on this day</p>
+                        <div className="flex flex-col items-center justify-center py-20 glass-card bg-black/40 border-dashed border-white/5 rounded-[2.5rem]">
+                            <History className="w-12 h-12 text-white/5 mb-4" />
+                            <div className="space-y-1 text-center">
+                                <p className="text-[11px] font-black text-gray-700 uppercase tracking-[0.4em]">Null Response</p>
+                                <p className="text-[9px] text-gray-800 font-bold uppercase tracking-widest italic">No operational data for this date</p>
+                            </div>
                         </div>
                     )}
                 </div>
             </section>
+
 
             <style>{`
                 .react-calendar {

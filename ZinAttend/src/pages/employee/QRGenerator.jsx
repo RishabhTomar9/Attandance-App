@@ -100,6 +100,15 @@ const QRGenerator = () => {
         return () => window.removeEventListener('popstate', handleBack);
     }, [isFullscreen]);
 
+    const formatTime12h = (timeStr) => {
+        if (!timeStr) return '--:--';
+        const [h, m] = timeStr.split(':');
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const h12 = hour % 12 || 12;
+        return `${h12}:${m} ${ampm}`;
+    };
+
     if (loading) return <Loader message="Initializing_Encryption_Hub" />;
 
     // Fullscreen QR view — maximizes the QR for easy scanning
@@ -186,7 +195,7 @@ const QRGenerator = () => {
                         <h3 className="text-xl font-black italic text-amber-500">TEMPORAL LOCK</h3>
                         <p className="text-gray-400 text-xs font-medium leading-relaxed max-w-xs mx-auto uppercase tracking-widest">
                             Site operational window:<br />
-                            <span className="text-white font-black">{userData.startTime} — {userData.endTime}</span>
+                            <span className="text-white font-black">{formatTime12h(userData.startTime)} — {formatTime12h(userData.endTime)}</span>
                         </p>
                     </div>
                     <p className="text-[10px] text-amber-500/50 font-bold uppercase tracking-[0.2em]">Signature hub suspended</p>

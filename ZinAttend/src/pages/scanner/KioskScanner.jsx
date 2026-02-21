@@ -346,48 +346,62 @@ const KioskScanner = () => {
             if (userSnap.empty) throw new Error('Employee not found. Please contact admin.');
             const empDoc = userSnap.docs[0].data();
 
-            // Auto punch logic
-            let punchType = 'IN';
-            if (nowTimeStr > siteData.endTime) {
-                punchType = 'OUT';
-            } else {
-                const startOfDay = new Date();
-                startOfDay.setHours(0, 0, 0, 0);
-                const attendanceQ = query(collection(db, 'attendance'), where('employeeId', '==', employeeId));
-                const logSnap = await getDocs(attendanceQ);
-                const todayLogs = logSnap.docs.filter(doc => {
-                    const log = doc.data();
-                    return log.siteId === siteData.siteId && log.timestamp?.toDate() >= startOfDay;
-                });
+            // FETCH TODAY'S ACTIVITY
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const attendanceQ = query(
+                collection(db, 'attendance'),
+                where('employeeId', '==', employeeId),
+                where('timestamp', '>=', startOfDay)
+            );
+            const logSnap = await getDocs(attendanceQ);
+            const todayLogs = logSnap.docs
+                .map(doc => ({ ...doc.data(), timestamp: doc.data().timestamp?.toDate() }))
+                .filter(log => log.siteId === siteData.siteId)
+                .sort((a, b) => a.timestamp - b.timestamp);
 
-                if (todayLogs.length === 0) {
-                    if (siteData.startTime) {
-                        const [startH, startM] = siteData.startTime.split(':').map(Number);
-                        const graceTime = new Date();
-                        graceTime.setHours(startH + 1, startM, 0, 0);
-                        punchType = now > graceTime ? 'HALF DAY' : 'IN';
+            const lastLog = todayLogs.length > 0 ? todayLogs[todayLogs.length - 1] : null;
+
+            // DETERMINISTIC PUNCH DETERMINATION
+            let punchType = 'IN';
+
+            if (!lastLog) {
+                // FIRST PUNCH OF THE DAY
+                if (siteData.startTime) {
+                    const [startH, startM] = siteData.startTime.split(':').map(Number);
+                    const shiftStart = new Date();
+                    shiftStart.setHours(startH, startM, 0, 0);
+
+                    // Half Day Threshold: If arriving after X hours into shift
+                    // Default to 4 hours if not set
+                    const thresholdHours = Number(siteData.halfDayHours) || 4;
+                    const halfDayLimit = new Date(shiftStart.getTime() + thresholdHours * 60 * 60 * 1000);
+
+                    if (now > halfDayLimit) {
+                        punchType = 'HALF DAY';
                     } else {
                         punchType = 'IN';
                     }
                 } else {
+                    punchType = 'IN';
+                }
+            } else {
+                // TOGGLE LOGIC (Robust for lunch breaks/multiple entries)
+                // If last was IN or HALF DAY, this is an OUT
+                if (lastLog.type === 'IN' || lastLog.type === 'HALF DAY') {
                     punchType = 'OUT';
+                } else {
+                    punchType = 'IN';
                 }
             }
 
+
             let firstInTime = null, totalDuration = null;
             if (punchType === 'OUT') {
-                const startOfDay = new Date();
-                startOfDay.setHours(0, 0, 0, 0);
-                const attendanceQ = query(collection(db, 'attendance'), where('employeeId', '==', employeeId));
-                const logSnap = await getDocs(attendanceQ);
-                const todayLogs = logSnap.docs
-                    .map(doc => ({ ...doc.data(), timestamp: doc.data().timestamp?.toDate() }))
-                    .filter(log => log.siteId === siteData.siteId && log.timestamp >= startOfDay)
-                    .sort((a, b) => a.timestamp - b.timestamp);
-
                 const firstInLog = todayLogs.find(log => log.type === 'IN' || log.type === 'HALF DAY');
+
                 if (firstInLog) {
-                    firstInTime = firstInLog.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    firstInTime = firstInLog.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                     const diffMs = now - firstInLog.timestamp;
                     totalDuration = `${Math.floor(diffMs / 3600000)}h ${Math.floor((diffMs % 3600000) / 60000)}m`;
                 }
@@ -407,7 +421,7 @@ const KioskScanner = () => {
             });
 
             playSound();
-            setScanResult({ success: true, name: empDoc.name, type: punchType, time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), firstInTime, totalDuration });
+            setScanResult({ success: true, name: empDoc.name, type: punchType, time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }), firstInTime, totalDuration });
 
         } catch (err) {
             console.error(err);
@@ -445,7 +459,7 @@ const KioskScanner = () => {
                             )}
                         </div>
                         <p className="text-[7px] text-primary/60 font-black uppercase tracking-widest mr-2">
-                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
                         </p>
                     </div>
                 </div>

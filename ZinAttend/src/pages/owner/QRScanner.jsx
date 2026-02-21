@@ -63,7 +63,7 @@ const QRScanner = () => {
                     if (devices?.length > 0) await startScanning();
                 }
             } catch (err) {
-                if (mounted) setError("Camera access required for secure verification.");
+                if (mounted) setError("Camera access required.");
             }
         };
         init();
@@ -135,7 +135,7 @@ const QRScanner = () => {
         } catch (err) {
             const msg = typeof err === 'string' ? err : err.message || '';
             if (!msg.includes("already under transition")) {
-                setError("Hardware initialization failed.");
+                setError("Camera failed to start.");
             }
             setIsScanning(false);
         } finally {
@@ -172,7 +172,7 @@ const QRScanner = () => {
             const ssid = data.net || data.ssid;
             const nonce = data.n || data.nonce;
 
-            if (siteId !== userData.siteId) throw new Error('Wrong site. Please use the correct QR code.');
+            if (siteId !== userData.siteId) throw new Error('Incorrect site QR.');
 
             // Verification Sequence
             const now = new Date();
@@ -180,11 +180,11 @@ const QRScanner = () => {
             const qrTime = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
 
             // Tight 15s window to prevent photo proxy
-            if (now.getTime() - qrTime > 15000) throw new Error('Live QR expired. Use the rotating code from employee app.');
+            if (now.getTime() - qrTime > 15000) throw new Error('QR code expired.');
 
             // Replay protection
             const nonceKey = nonce || `${employeeId}_${timestamp}`;
-            if (processedNonces.current.has(nonceKey)) throw new Error('Security signature already used. Wait for rotation.');
+            if (processedNonces.current.has(nonceKey)) throw new Error('Code already used.');
             processedNonces.current.add(nonceKey);
 
             // Keep recent nonces only
@@ -194,9 +194,9 @@ const QRScanner = () => {
             }
 
             const dist = calculateDistance(lat, lng, userData.latitude, userData.longitude);
-            if (dist > (userData.geoRadius || 100)) throw new Error(`You are too far from the site (${Math.round(dist)}m away).`);
+            if (dist > (userData.geoRadius || 100)) throw new Error(`Too far from office (${Math.round(dist)}m).`);
 
-            if (userData.wifiSSID && ssid !== userData.wifiSSID) throw new Error('Wrong WiFi network. Connect to the office WiFi.');
+            if (userData.wifiSSID && ssid !== userData.wifiSSID) throw new Error('Connect to Office WiFi.');
 
             // Fetch Personnel Doc
             const userQ = query(collection(db, 'users'), where('employeeId', '==', employeeId), limit(1));
@@ -259,7 +259,7 @@ const QRScanner = () => {
                 const firstInLog = todayLogs.find(log => log.type === 'IN' || log.type === 'HALF DAY');
                 if (firstInLog) {
                     const firstIn = firstInLog.timestamp;
-                    firstInTime = firstIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    firstInTime = firstIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                     const diffMs = now - firstIn;
                     const diffHrs = Math.floor(diffMs / 3600000);
                     const diffMins = Math.floor((diffMs % 3600000) / 60000);
@@ -281,12 +281,12 @@ const QRScanner = () => {
             });
 
             playSound();
-            setScanResult({ success: true, name: empDoc.name, type: punchType, time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), firstInTime, totalDuration });
+            setScanResult({ success: true, name: empDoc.name, type: punchType, time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }), firstInTime, totalDuration });
             showToast(`${empDoc.name} punched ${punchType} successfully`, 'success');
 
         } catch (err) {
             console.error(err);
-            const msg = err.message || 'Something went wrong. Try again.';
+            const msg = err.message || 'Error. Please try again.';
             setError(msg);
             showToast(msg, 'error');
         }
@@ -315,7 +315,7 @@ const QRScanner = () => {
                         className="group flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all active:scale-95 shadow-2xl"
                     >
                         <ChevronLeft className="w-4 h-4 text-primary group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Dashboard</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Home</span>
                     </button>
 
                     <div className="flex items-center space-x-3">
@@ -331,7 +331,7 @@ const QRScanner = () => {
                         <div className="text-right flex flex-col items-end space-y-1">
                             <div className="inline-flex items-center space-x-2 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-2xl">
                                 <Zap className="w-3 h-3 text-primary animate-pulse" />
-                                <span className="text-[9px] font-black uppercase tracking-[.2em] text-white/90">{userData?.siteName || 'ZINTRIX_NODE'}</span>
+                                <span className="text-[9px] font-black uppercase tracking-[.2em] text-white/90">{userData?.siteName || 'Office'}</span>
                             </div>
                         </div>
                     </div>
@@ -380,7 +380,7 @@ const QRScanner = () => {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <p className="text-[12px] font-black tracking-[0.4em] text-primary uppercase animate-pulse">Please Wait</p>
+                                            <p className="text-[12px] font-black tracking-[0.4em] text-primary uppercase animate-pulse">Verifying</p>
                                             <p className="text-[8px] text-white/30 uppercase tracking-[0.3em]">Checking attendance...</p>
                                         </div>
                                     </div>
@@ -396,7 +396,7 @@ const QRScanner = () => {
                                         <div className="space-y-3">
                                             <p className="text-[12px] font-black text-white/30 uppercase tracking-[.3em]">{scanResult.name}</p>
                                             <h3 className={`text-4xl font-black italic  transition-all ${scanResult.type === 'HALF DAY' ? 'text-amber-500' : 'text-white'}`}>
-                                                {scanResult.type === 'HALF DAY' ? 'Late Entry' : scanResult.type === 'IN' ? 'Punched In ✓' : 'Punched Out ✓'}
+                                                {scanResult.type === 'HALF DAY' ? 'Late Entry' : scanResult.type === 'IN' ? 'Checked In' : 'Checked Out'}
                                             </h3>
                                         </div>
 
@@ -422,7 +422,7 @@ const QRScanner = () => {
                                             <div className="w-full h-1.5 bg-white/5 rounded-lg relative overflow-hidden">
                                                 <div className="h-full bg-emerald-500 animate-timer-drain origin-left shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
                                             </div>
-                                            <p className="text-[8px] text-white/20 uppercase tracking-[.3em] font-bold">Scanner will restart in 5 seconds</p>
+                                            <p className="text-[8px] text-white/20 uppercase tracking-[.3em] font-bold">Restarting in 5s...</p>
                                         </div>
                                     </div>
                                 ) : (

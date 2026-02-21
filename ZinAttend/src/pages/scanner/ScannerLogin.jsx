@@ -66,9 +66,11 @@ const ScannerLogin = () => {
                 wifiSSID: siteData.wifiSSID,
                 startTime: siteData.startTime,
                 endTime: siteData.endTime,
+                halfDayHours: siteData.halfDayHours || 4,
                 ts: Date.now()
             };
             sessionStorage.setItem('scannerSession', JSON.stringify(scannerSession));
+
             navigate('/scanner');
 
         } catch (err) {
