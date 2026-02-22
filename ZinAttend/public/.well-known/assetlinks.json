@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "app.web.attandance_by_zintrix.twa",
+            "sha256_cert_fingerprints": [
+                "B5:7D:4B:A2:CA:AB:43:60:3F:A1:22:FB:1D:DA:19:C6:8D:19:09:8F:8B:EE:47:A4:FE:5E:9A:BE:AE:3D:E0:E0"
+            ]
+        }
+    }
+]
