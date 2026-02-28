@@ -91,7 +91,7 @@ const EmployeeDashboard = () => {
                     <Link to="/employee/qr" className="flex flex-col items-center space-y-1">
                         <div className={`w-18 h-18 rounded-[2rem] bg-gradient-to-tr from-primary to-accent p-[2px] shadow-[0_10px_30px_rgba(59,130,246,0.3)] group-hover:scale-110 group-active:scale-95 transition-all duration-500 relative overflow-hidden`}>
                             <div className="w-full h-full rounded-[2rem] bg-black flex items-center justify-center relative z-10">
-                                <QrCode className="w-9 h-9 text-white group-hover:rotate-12 transition-transform duration-500" />
+                                <img src="/icon-512.png" className="w-9 h-9 text-white group-hover:rotate-12 transition-transform duration-500" />
                             </div>
                             <div className="absolute inset-0 bg-primary/20 animate-pulse"></div>
                         </div>

@@ -96,7 +96,7 @@ const OwnerDashboard = () => {
                 <Link to="/owner/scanner" className="relative -top-6 group">
                     <div className="w-16 h-16 rounded-lg bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300">
                         <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                            <QrCode className="w-8 h-8 text-white" />
+                            <img src="/icon-512.png" className="w-25 h-20 text-white" />
                         </div>
                     </div>
                     <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-widest text-primary uppercase">Scan</span>
