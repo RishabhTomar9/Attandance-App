@@ -48,6 +48,7 @@ const QRGenerator = () => {
                 return;
             }
 
+            // Using a shorter timeout for faster initial load
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -57,7 +58,7 @@ const QRGenerator = () => {
                     setError('GPS Uplink Request Denied. Location access required.');
                     setLoading(false);
                 },
-                { enableHighAccuracy: true }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
             );
         };
 
@@ -115,40 +116,46 @@ const QRGenerator = () => {
     if (isFullscreen) {
         return (
             <div
-                className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center"
+                className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-in fade-in duration-300"
                 onClick={toggleFullscreen}
             >
-                <div className="flex-1 flex items-center justify-center w-full p-6">
-                    {qrData ? (
-                        <QRCodeSVG
-                            value={qrData}
-                            size={Math.min(window.innerWidth, window.innerHeight) * 0.85}
-                            level="M"
-                            includeMargin={true}
-                            style={{ maxWidth: '100%', maxHeight: '100%' }}
-                        />
-                    ) : (
-                        <RefreshCw className="animate-spin text-gray-300 w-16 h-16" />
-                    )}
+                {/* Visual indicator of high-visibility mode */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-black/5 rounded-full flex items-center space-x-2 border border-black/5">
+                    <Maximize2 className="w-3 h-3 text-black/40" />
+                    <span className="text-[9px] font-black text-black/40 uppercase tracking-widest">High-Visibility Mode</span>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center w-full p-8">
+                    <div className="bg-white p-4 rounded-3xl shadow-[0_0_100px_rgba(0,0,0,0.05)] border border-gray-100">
+                        {qrData ? (
+                            <QRCodeSVG
+                                value={qrData}
+                                size={Math.min(window.innerWidth, window.innerHeight) * 0.85}
+                                level="H"
+                                includeMargin={false}
+                                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                                imageSettings={{
+                                    src: "/icon-512.png",
+                                    height: 50,
+                                    width: 50,
+                                    excavate: true,
+                                }}
+                            />
+                        ) : (
+                            <RefreshCw className="animate-spin text-gray-200 w-16 h-16" />
+                        )}
+                    </div>
                 </div>
 
                 {/* Bottom info bar */}
-                <div className="w-full bg-black py-4 px-6 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                        <Activity className="w-4 h-4 text-primary animate-pulse" />
-                        <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
-                            ROTATING: {timeLeft}S
+                <div className="w-full bg-black py-6 px-10 flex items-center justify-between shadow-2xl">
+                    <div className="flex items-center space-x-4">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                        <span className="text-[11px] font-black text-white uppercase tracking-[0.3em] italic">
+                            CODE ROTATION: {timeLeft}S
                         </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <div className="w-full bg-white/10 rounded-full h-1 w-20 overflow-hidden">
-                            <div
-                                className="h-full bg-primary rounded-full transition-all duration-1000 ease-linear"
-                                style={{ width: `${(timeLeft / 10) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest">Tap to exit</span>
+                    <span className="text-[9px] text-white/30 font-bold uppercase tracking-[.4em] italic">Tap to exit Hub</span>
                 </div>
             </div>
         );
@@ -229,8 +236,16 @@ const QRGenerator = () => {
                                 <QRCodeSVG
                                     value={qrData}
                                     size={QR_SIZE}
-                                    level="M"
+                                    level="H"
                                     includeMargin={false}
+                                    imageSettings={{
+                                        src: "/icon-512.png",
+                                        x: undefined,
+                                        y: undefined,
+                                        height: 30,
+                                        width: 30,
+                                        excavate: true,
+                                    }}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center" style={{ width: QR_SIZE, height: QR_SIZE }}>

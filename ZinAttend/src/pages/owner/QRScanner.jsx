@@ -44,13 +44,24 @@ const QRScanner = () => {
     // Auto-restart timer after success or error
     useEffect(() => {
         let timer;
+        let reinitTimer;
         if (scanResult?.success || error) {
+            // Start reinitializing camera immediately in the background
+            // so it's ready when the banner closes
+            reinitTimer = setTimeout(() => {
+                startScanning(facingMode, true);
+            }, 1000);
+
             timer = setTimeout(() => {
-                startScanning();
+                setScanResult(null);
+                setError(null);
             }, 5000);
         }
-        return () => clearTimeout(timer);
-    }, [scanResult, error]);
+        return () => {
+            clearTimeout(timer);
+            clearTimeout(reinitTimer);
+        };
+    }, [scanResult?.success, error]);
 
     // Initial hardware connection
     useEffect(() => {
@@ -81,7 +92,7 @@ const QRScanner = () => {
         setTimeout(() => startScanning(newMode), 300);
     };
 
-    const startScanning = async (overrideFacing) => {
+    const startScanning = async (overrideFacing, keepUI = false) => {
         if (isTransitioning.current) return;
         isTransitioning.current = true;
         const mode = overrideFacing || facingMode;
@@ -90,8 +101,10 @@ const QRScanner = () => {
             if (html5QrCode.current.isScanning) await html5QrCode.current.stop();
 
             setIsScanning(true);
-            setScanResult(null);
-            setError(null);
+            if (!keepUI) {
+                setScanResult(null);
+                setError(null);
+            }
 
             try {
                 await html5QrCode.current.start(
@@ -100,17 +113,17 @@ const QRScanner = () => {
                         fps: 60,
                         qrbox: (viewfinderWidth, viewfinderHeight) => {
                             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                            const boxSize = Math.floor(minEdge * 0.95);
+                            const boxSize = Math.floor(minEdge * 0.85);
                             return { width: boxSize, height: boxSize };
                         },
                         aspectRatio: window.innerWidth / window.innerHeight,
                         videoConstraints: {
                             facingMode: mode,
-                            width: { ideal: 4096 },
-                            height: { ideal: 2160 },
+                            width: { ideal: 1920 }, // 1080p is better for high-speed decoding than 4K
+                            height: { ideal: 1080 },
                             frameRate: { ideal: 60 },
                             // Auto-zoom to 2x for back camera to avoid ultrawide distortion and align QR better
-                            advanced: mode === "environment" ? [{ zoom: 2.0 }] : []
+                            advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
                         }
                     },
                     onScanSuccess,
@@ -158,6 +171,7 @@ const QRScanner = () => {
     };
 
     const onScanSuccess = async (decodedText) => {
+        if (scanResult || error) return; // Ignore if banner is active
         await stopScanning();
         setScanResult({ loading: true });
 

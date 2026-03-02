@@ -68,11 +68,22 @@ const KioskScanner = () => {
     // Auto-restart after result
     useEffect(() => {
         let timer;
+        let reinitTimer;
         if (scanResult?.success || error) {
-            timer = setTimeout(() => startScanning(), 5000);
+            // Reinitialize camera immediately to warm up
+            reinitTimer = setTimeout(() => startScanning(facingMode, true), 1000);
+
+            // Close banner after 5s
+            timer = setTimeout(() => {
+                setScanResult(null);
+                setError(null);
+            }, 5000);
         }
-        return () => clearTimeout(timer);
-    }, [scanResult, error]);
+        return () => {
+            clearTimeout(timer);
+            clearTimeout(reinitTimer);
+        };
+    }, [scanResult?.success, error]);
 
     // Init camera
     useEffect(() => {
@@ -223,7 +234,7 @@ const KioskScanner = () => {
 
     // --- SCANNER LOGIC ---
 
-    const startScanning = async (overrideFacing) => {
+    const startScanning = async (overrideFacing, keepUI = false) => {
         if (isTransitioning.current) return;
         isTransitioning.current = true;
         const mode = overrideFacing || facingMode;
@@ -231,8 +242,10 @@ const KioskScanner = () => {
             if (!html5QrCode.current) html5QrCode.current = new Html5Qrcode(scannerId);
             if (html5QrCode.current.isScanning) await html5QrCode.current.stop();
             setIsScanning(true);
-            setScanResult(null);
-            setError(null);
+            if (!keepUI) {
+                setScanResult(null);
+                setError(null);
+            }
 
             try {
                 await html5QrCode.current.start(
@@ -240,17 +253,17 @@ const KioskScanner = () => {
                     {
                         fps: 60,
                         qrbox: (w, h) => {
-                            const size = Math.floor(Math.min(w, h) * 0.95);
+                            const size = Math.floor(Math.min(w, h) * 0.85);
                             return { width: size, height: size };
                         },
                         aspectRatio: window.innerWidth / window.innerHeight,
                         videoConstraints: {
                             facingMode: mode,
-                            width: { ideal: 4096 },
-                            height: { ideal: 2160 },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
                             frameRate: { ideal: 60 },
                             // Auto-zoom to 2x for back camera to avoid ultrawide distortion and align QR better
-                            advanced: mode === "environment" ? [{ zoom: 2.0 }] : []
+                            advanced: [{ zoom: 1.0 }, { focusMode: "continuous" }]
                         }
                     },
                     onScanSuccess,
@@ -301,6 +314,7 @@ const KioskScanner = () => {
     };
 
     const onScanSuccess = async (decodedText) => {
+        if (scanResult || error) return; // Prevent duplicate scans while banner is active
         await stopScanning();
         setScanResult({ loading: true });
 

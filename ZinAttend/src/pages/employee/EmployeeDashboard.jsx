@@ -90,10 +90,14 @@ const EmployeeDashboard = () => {
                 <div className="relative group">
                     <Link to="/employee/qr" className="flex flex-col items-center space-y-1">
                         <div className={`w-18 h-18 rounded-[2rem] bg-gradient-to-tr from-primary to-accent p-[2px] shadow-[0_10px_30px_rgba(59,130,246,0.3)] group-hover:scale-110 group-active:scale-95 transition-all duration-500 relative overflow-hidden`}>
-                            <div className="w-full h-full rounded-[2rem] bg-black flex items-center justify-center relative z-10">
-                                <img src="/icon-512.png" className="w-9 h-9 text-white group-hover:rotate-12 transition-transform duration-500" />
+                            <div className="w-full h-full rounded-[2rem] bg-black flex items-center justify-center relative z-10 overflow-hidden">
+                                <QrCode className="w-9 h-9 text-white group-hover:rotate-12 transition-transform duration-500 relative z-20" />
+                                {/* Scanning Laser Animation */}
+                                <div className="absolute inset-0 z-0">
+                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan-line"></div>
+                                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
                             </div>
-                            <div className="absolute inset-0 bg-primary/20 animate-pulse"></div>
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Punch</span>
                     </Link>
@@ -106,10 +110,17 @@ const EmployeeDashboard = () => {
                     <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isActive('/employee/calendar') ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>History</span>
                 </Link>
             </nav>
-
+            <style>{`
+                @keyframes scan-line {
+                    0% { top: 0%; opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                .animate-scan-line { animation: scan-line 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+            `}</style>
         </div>
     );
 };
 
 export default EmployeeDashboard;
-

@@ -2,17 +2,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UIProvider } from './contexts/UIContext';
-
-// Components
-import Login from './pages/Login';
-import RoleSelection from './pages/RoleSelection';
-import OwnerDashboard from './pages/owner/OwnerDashboard';
-import OwnerRegister from './pages/owner/OwnerRegister';
-import EmployeeDashboard from './pages/employee/EmployeeDashboard';
-import ScannerLogin from './pages/scanner/ScannerLogin';
-import KioskScanner from './pages/scanner/KioskScanner';
-
 import Loader from './components/UI/Loader';
+
+// Lazy load pages for better performance
+const Login = React.lazy(() => import('./pages/Login'));
+const RoleSelection = React.lazy(() => import('./pages/RoleSelection'));
+const OwnerDashboard = React.lazy(() => import('./pages/owner/OwnerDashboard'));
+const OwnerRegister = React.lazy(() => import('./pages/owner/OwnerRegister'));
+const EmployeeDashboard = React.lazy(() => import('./pages/employee/EmployeeDashboard'));
+const ScannerLogin = React.lazy(() => import('./pages/scanner/ScannerLogin'));
+const KioskScanner = React.lazy(() => import('./pages/scanner/KioskScanner'));
 
 const ProtectedRoute = ({ children, role }) => {
     const { user, userData, loading } = useAuth();
@@ -85,7 +84,9 @@ function App() {
         <AuthProvider>
             <UIProvider>
                 <Router>
-                    <AppRoutes />
+                    <React.Suspense fallback={<Loader />}>
+                        <AppRoutes />
+                    </React.Suspense>
                 </Router>
             </UIProvider>
         </AuthProvider>

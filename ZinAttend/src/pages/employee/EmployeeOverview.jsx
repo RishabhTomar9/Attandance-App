@@ -178,17 +178,17 @@ const EmployeeOverview = () => {
 
                         <div className="grid grid-cols-2 gap-8 relative">
                             <div className="space-y-3">
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center space-x-2">
+                                <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center space-x-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                                     <span>First Punch</span>
-                                </p>
+                                </div>
                                 <p className="text-4xl font-black tracking-tight">{stats.todayIn}</p>
                             </div>
                             <div className="space-y-3 text-right">
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center justify-end space-x-2">
+                                <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center justify-end space-x-2">
                                     <span>Last Punch</span>
                                     <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
-                                </p>
+                                </div>
                                 <p className="text-4xl font-black tracking-tight">{stats.todayOut}</p>
                             </div>
                             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-[1px] bg-white/5"></div>

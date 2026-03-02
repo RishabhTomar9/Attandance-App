@@ -94,9 +94,14 @@ const OwnerDashboard = () => {
                 </Link>
 
                 <Link to="/owner/scanner" className="relative -top-6 group">
-                    <div className="w-16 h-16 rounded-lg bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300">
-                        <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                            <img src="/icon-512.png" className="w-25 h-20 text-white" />
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                        <div className="w-full h-full rounded-xl bg-black flex items-center justify-center relative overflow-hidden">
+                            <QrCode className="w-8 h-8 text-white relative z-10 group-hover:rotate-12 transition-transform duration-500" />
+                            {/* Scanning Laser Animation */}
+                            <div className="absolute inset-0 z-0">
+                                <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan-line"></div>
+                                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
                         </div>
                     </div>
                     <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-widest text-primary uppercase">Scan</span>
@@ -109,6 +114,15 @@ const OwnerDashboard = () => {
                     <span className="text-[10px] font-bold uppercase tracking-wider">Setup</span>
                 </Link>
             </nav>
+            <style>{`
+                @keyframes scan-line {
+                    0% { top: 0%; opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                .animate-scan-line { animation: scan-line 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+            `}</style>
         </div>
     );
 };
