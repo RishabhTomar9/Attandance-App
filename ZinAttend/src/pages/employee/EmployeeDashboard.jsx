@@ -79,35 +79,33 @@ const EmployeeDashboard = () => {
             </main>
 
 
-            <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/5 px-4 pt-4 pb-8 flex justify-around items-center z-50">
-                <Link to="/employee" className={`flex flex-col items-center space-y-1 group transition-all duration-300 ${isActive('/employee') ? 'text-primary' : 'text-gray-500 hover:text-gray-400'}`}>
-                    <div className={`p-2 rounded-2xl transition-all duration-500 ${isActive('/employee') ? 'bg-primary/10' : 'group-hover:bg-white/5'}`}>
-                        <Home className={`w-6 h-6 ${isActive('/employee') ? 'scale-110' : 'group-hover:scale-110'} transition-transform`} />
+            <nav className="bottom-nav px-4">
+                <Link to="/employee" className={`nav-item ${isActive('/employee') ? 'active' : ''}`}>
+                    <div className="nav-item-icon">
+                        <Home className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isActive('/employee') ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>Home</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </Link>
 
-                <div className="relative group">
-                    <Link to="/employee/qr" className="flex flex-col items-center space-y-1">
-                        <div className={`w-18 h-18 rounded-[2rem] bg-gradient-to-tr from-primary to-accent p-[2px] shadow-[0_10px_30px_rgba(59,130,246,0.3)] group-hover:scale-110 group-active:scale-95 transition-all duration-500 relative overflow-hidden`}>
-                            <div className="w-full h-full rounded-[2rem] bg-black flex items-center justify-center relative z-10 overflow-hidden">
-                                <QrCode className="w-9 h-9 text-white group-hover:rotate-12 transition-transform duration-500 relative z-20" />
-                                {/* Scanning Laser Animation */}
-                                <div className="absolute inset-0 z-0">
-                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan-line"></div>
-                                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                </div>
+                <Link to="/employee/qr" className="relative -top-6 group">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-primary to-accent p-[2px] shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                        <div className="w-full h-full rounded-xl bg-black flex items-center justify-center relative overflow-hidden">
+                            <QrCode className="w-8 h-8 text-white relative z-10 group-hover:rotate-12 transition-transform duration-500" />
+                            {/* Scanning Laser Animation */}
+                            <div className="absolute inset-0 z-0">
+                                <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan-line"></div>
+                                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Punch</span>
-                    </Link>
-                </div>
-
-                <Link to="/employee/calendar" className={`flex flex-col items-center space-y-1 group transition-all duration-300 ${isActive('/employee/calendar') ? 'text-primary' : 'text-gray-500 hover:text-gray-400'}`}>
-                    <div className={`p-2 rounded-2xl transition-all duration-500 ${isActive('/employee/calendar') ? 'bg-primary/10' : 'group-hover:bg-white/5'}`}>
-                        <History className={`w-6 h-6 ${isActive('/employee/calendar') ? 'scale-110' : 'group-hover:scale-110'} transition-transform`} />
                     </div>
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isActive('/employee/calendar') ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>History</span>
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black tracking-widest text-primary uppercase">Punch</span>
+                </Link>
+
+                <Link to="/employee/calendar" className={`nav-item ${isActive('/employee/calendar') ? 'active' : ''}`}>
+                    <div className="nav-item-icon">
+                        <History className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">History</span>
                 </Link>
             </nav>
             <style>{`
